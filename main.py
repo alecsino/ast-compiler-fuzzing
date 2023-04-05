@@ -3,7 +3,7 @@ import json
 from tqdm import tqdm
 import multiprocessing as mp
 from modules.compiler import Compiler
-from modules.importer import Importer
+from modules.importer import DataLoader
 from modules.arg_parser import ArgParser
 
 def main():
@@ -11,21 +11,13 @@ def main():
     args = arg_parser.args 
 
     compiler = Compiler(args)
-    tests = Importer(args)
-
-    #clear data folder
-    if os.path.exists('data'):
-        for file in os.listdir("data"):
-            os.remove(os.path.join("data", file))
-    else:
+    data_loader = DataLoader().tests()
+    
+    if not os.path.exists('data'):
         os.makedirs('data')
-
     
     #TODO: change this - for now it just takes the c files in the tests directory
-    files = []
-    for file in os.listdir("tests"):
-        if file.endswith(".c"):
-            files.append(os.path.join("tests", file))
+    files = [ test.file.name for test in data_loader.tests()]
     
     interesting_tests = []
     # use mp pool to run the tests in parallel
@@ -49,6 +41,7 @@ def main():
         if i["max_rateo"] > 1:
             print(i)
             json.dump(i, open(os.path.join("data", i["file"] + ".json"), "w"))
+
 
 if __name__ == "__main__":
     main()
