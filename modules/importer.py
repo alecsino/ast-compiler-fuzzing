@@ -10,7 +10,7 @@ _FILE_EXTENSION = '**/*.[c cpp]'
 
 
 class DataLoader:
-    """Importer class for importing tests and preprocessing files."""
+    """Class for importing and preprocessing tests."""
     
     def __init__(self):
         # Constructor code goes here
@@ -25,7 +25,7 @@ class DataLoader:
         return tests
     
     def is_executable(self, file: Path) -> str:
-        """Check whether the test case is executable or not."""
+        """Check whether the test file is executable or not."""
         
         with file.open(encoding="ISO-8859-1", errors='ignore') as f:
             file_contents = f.read()

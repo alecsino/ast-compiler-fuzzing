@@ -8,7 +8,7 @@ def main():
     args = arg_parser.args 
 
     compiler = Compiler(args)
-    data_loader = DataLoader().tests()
+    data_loader = DataLoader()
     
     if not os.path.exists('data'):
         os.makedirs('data')
