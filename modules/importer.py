@@ -1,4 +1,4 @@
-class Tests:
-    def __init__(self):
+class Importer:
+    def __init__(self, args):
         # Constructor code goes here
         pass
