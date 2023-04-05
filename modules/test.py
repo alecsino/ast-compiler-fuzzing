@@ -9,5 +9,3 @@ class Test:
     
     inputs: dict
     """Input values for the test."""
-    
-    

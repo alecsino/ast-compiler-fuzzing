@@ -3,7 +3,7 @@ import json
 from tqdm import tqdm
 import multiprocessing as mp
 from modules.compiler import Compiler
-from modules.importer import DataLoader
+from modules.data_loader import DataLoader
 from modules.arg_parser import ArgParser
 
 def main():
@@ -11,7 +11,7 @@ def main():
     args = arg_parser.args 
 
     compiler = Compiler(args)
-    data_loader = DataLoader().tests()
+    data_loader = DataLoader()
     
     if not os.path.exists('data'):
         os.makedirs('data')
