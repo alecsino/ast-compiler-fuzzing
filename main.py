@@ -1,6 +1,6 @@
 import os
 from modules.compiler import Compiler
-from modules.importer import Importer
+from modules.importer import DataLoader
 from modules.arg_parser import ArgParser
 
 def main():
@@ -8,10 +8,12 @@ def main():
     args = arg_parser.args 
 
     compiler = Compiler(args)
-    tests = Importer(args)
-
+    data_loader = DataLoader().tests()
+    
     if not os.path.exists('data'):
         os.makedirs('data')
+    
+
 
 if __name__ == "__main__":
     main()
