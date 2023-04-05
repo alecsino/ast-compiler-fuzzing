@@ -3,6 +3,7 @@ import multiprocessing
 import shutil
 
 class ArgParser:
+    """ This class is used to parse the command line arguments. """
     def __init__(self):
         self.parser = argparse.ArgumentParser()
         self.parser.add_argument("-c", "--compiler", help="Specify the compiler", default="gcc")
