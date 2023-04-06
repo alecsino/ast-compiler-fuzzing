@@ -5,7 +5,7 @@ import subprocess
 
 class ArgParser:
     """ This class is used to parse the command line arguments. """
-    DEFAULT_COMPILER = "gcc-12"
+    DEFAULT_COMPILER = "gcc"
 
     def __init__(self):
         self.parser = argparse.ArgumentParser()
