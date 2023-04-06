@@ -2,6 +2,7 @@ import os
 import subprocess
 
 class Compiler:
+    FLAGS = ["-O3", "-fno-unroll-loops"]
     """Compiles the tests with the current compiler and with the previous"""
     def __init__(self, args):
         self.args = args
@@ -14,7 +15,7 @@ class Compiler:
 
         output_dir = os.path.join("tmp", output_name)
         try:
-            subprocess.run([compiler, test, "-S", "-O3", "-o", output_dir], check=True, stderr=subprocess.DEVNULL)
+            subprocess.run([compiler, test, "-S", "-o", output_dir] + self.FLAGS, check=True, stderr=subprocess.DEVNULL)
         except subprocess.CalledProcessError:
             # print(f"Compilation of file {test} with compiler {compiler} failed.")
             return 0

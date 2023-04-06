@@ -15,6 +15,9 @@ def main():
     
     if not os.path.exists('data'):
         os.makedirs('data')
+
+    for file in os.listdir("data"):
+        os.remove(os.path.join("data", file))
     
     #TODO: change this - for now it just takes the c files in the tests directory
     files = [ str(test.file) for test in data_loader.tests()]
