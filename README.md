@@ -4,7 +4,7 @@
 ### Requirements
 Make sure you have `pip` installed. To check if pip is install, run the following snippet 
 ```bash
-    $ pip --versionn
+    $ pip --version
 ```
 
 If you do not have `pip`, you can install it with the following commands
