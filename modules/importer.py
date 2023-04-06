@@ -16,25 +16,46 @@ class DataLoader:
         # Constructor code goes here
         pass
     
-    def tests(self, directory: str = "./tests") -> str:
-        """Retrieve processed tests files from the directory."""
+    def tests(self, directory: str = "./tests") -> list[Test]:
+        """Collect the processed tests from the given directory.
+
+        Args:
+            directory (str, optional): directory of tests. Defaults to "./tests".
+
+        Returns:
+            list[Tests]: list of processed tests.
+        """        
 
         test_directory = Path(directory)
         executable_tests = [test_file for test_file in test_directory.glob(_FILE_EXTENSION) if self.is_executable(test_file)]
         tests = [self.promote_constants_to_variables(test_file) for test_file in  executable_tests]
         return tests
     
-    def is_executable(self, file: Path) -> str:
-        """Check whether the test file is executable or not."""
+    def _is_executable(self, file: Path) -> bool:
+        """Check if the file is executable.
+
+        Args:
+            file (Path): path to the file.
+
+        Returns:
+            bool: whether the file is executable.
+        """        
         
         with file.open(encoding="ISO-8859-1", errors='ignore') as f:
             file_contents = f.read()
         match = re.search(_PATTERN, file_contents)
         return True if match else False
     
-    def promote_constants_to_variables(self, file: Path) -> str:
-        """Promote constants to variables in the test file."""
-        
+    def _promote_constants_to_variables(self, file: Path, to_directory: str) -> Test:
+        """Promote constants to variables in the given file.
+
+        Args:
+            file (Path): path to the file.
+            to_directory (str): directory to save the modified file.
+
+        Returns:
+            Test: the processed test.
+        """       
         # modify the file to promote constants to variables and save it to a new file
         return Test(file=file, inputs={})
     
