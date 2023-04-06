@@ -17,7 +17,7 @@ def main():
         os.makedirs('data')
     
     #TODO: change this - for now it just takes the c files in the tests directory
-    files = [ test.file.name for test in data_loader.tests()]
+    files = [ str(test.file) for test in data_loader.tests()]
     
     interesting_tests = []
     # use mp pool to run the tests in parallel
@@ -41,7 +41,6 @@ def main():
         if i["max_rateo"] > 1:
             print(i)
             json.dump(i, open(os.path.join("data", i["file"] + ".json"), "w"))
-
 
 if __name__ == "__main__":
     main()
