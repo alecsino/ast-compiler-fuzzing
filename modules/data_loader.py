@@ -27,8 +27,8 @@ class DataLoader:
         """        
 
         test_directory = Path(directory)
-        executable_tests = [test_file for test_file in test_directory.glob(_FILE_EXTENSION) if self.is_executable(test_file)]
-        tests = [self.promote_constants_to_variables(test_file) for test_file in  executable_tests]
+        executable_tests = [test_file for test_file in test_directory.glob(_FILE_EXTENSION) if self._is_executable(test_file)]
+        tests = [self._promote_constants_to_variables(test_file) for test_file in  executable_tests]
         return tests
     
     def _is_executable(self, file: Path) -> bool:
@@ -46,7 +46,7 @@ class DataLoader:
         match = re.search(_PATTERN, file_contents)
         return True if match else False
     
-    def _promote_constants_to_variables(self, file: Path, to_directory: str) -> Test:
+    def _promote_constants_to_variables(self, file: Path) -> Test:
         """Promote constants to variables in the given file.
 
         Args:
@@ -58,5 +58,4 @@ class DataLoader:
         """       
         # modify the file to promote constants to variables and save it to a new file
         return Test(file=file, inputs={})
-    
     

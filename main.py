@@ -1,6 +1,6 @@
 import os
 from modules.compiler import Compiler
-from modules.importer import DataLoader
+from modules.data_loader import DataLoader
 from modules.arg_parser import ArgParser
 
 def main():
