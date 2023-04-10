@@ -17,7 +17,7 @@ def main():
         os.makedirs('data')
     
     #TODO: change this - for now it just takes the c files in the tests directory
-    files = [ str(test.file) for test in data_loader.tests()]
+    files = [ test.name for test in data_loader.tests()]
     
     interesting_tests = []
     # use mp pool to run the tests in parallel
