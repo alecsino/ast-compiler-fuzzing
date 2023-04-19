@@ -31,3 +31,11 @@ Finally, you can deactivate the virtual environment with
 ```bash
    $ deactivate
 ```
+
+
+## **Tests**
+To run the tests, from the project directory run
+
+```bash
+   pytest .
+```

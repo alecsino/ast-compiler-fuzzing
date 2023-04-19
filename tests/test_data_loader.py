@@ -33,7 +33,6 @@ def test__promote_constants_to_variables(data_loader):
     Args:
         data_loader (DataLoader): the data loader
     """
-    print(data_loader._promote_constants_to_variables(Path(_TEST_PATH_GLOBAL)).inputs)
     assert data_loader._promote_constants_to_variables(Path(_TEST_PATH_GLOBAL)).inputs == {
                                                                                            0: Input(name='a', value="0", type='int'),
                                                                                            1: Input(name='b', value="0", type='int'), 
@@ -42,6 +41,7 @@ def test__promote_constants_to_variables(data_loader):
                                                                                            4: Input(name='array', value="{1, 2, 4}", type=list['int'], len="10"),
                                                                                            5: Input(name='string', value='"1023939"', type=list['char'], len="Infer from object")
                                                                                            }
+    
     assert data_loader._promote_constants_to_variables(Path(_TEST_PATH_NON_GLOBAL)).inputs == {
                                                                                            0: Input(name='a', value="0", type='int'),
                                                                                            1: Input(name='b', value="0", type='int'), 
