@@ -38,7 +38,7 @@ class Test:
     name: str 
     """Test file path."""
     
-    file: bytes 
+    file: str 
     """Test file content."""
     
     inputs: dict[int, Input]
