@@ -1,4 +1,5 @@
 from pathlib import Path
+import sys
 import pytest
 from modules.data_loader import DataLoader
 from modules.test import Input
@@ -41,6 +42,7 @@ def test__promote_constants_to_variables(data_loader):
                                                                                            4: Input(name='array', value="{1, 2, 4}", type=list['int'], len="10"),
                                                                                            5: Input(name='string', value='"1023939"', type=list['char'], len="Infer from object")
                                                                                            }
+    assert data_loader._promote_constants_to_variables(Path(_TEST_PATH_GLOBAL)).file =="""int [INPUT_0], [INPUT_1], [INPUT_2];\nvolatile short [INPUT_3];\nint [INPUT_4];\nchar [INPUT_5];\n\n\n\nint main() {\n    return c;\n}"""
     
     assert data_loader._promote_constants_to_variables(Path(_TEST_PATH_NON_GLOBAL)).inputs == {
                                                                                            0: Input(name='a', value="0", type='int'),
@@ -50,6 +52,7 @@ def test__promote_constants_to_variables(data_loader):
                                                                                            4: Input(name='string', value='"1023939"', type=list['char'], len="Infer from object"),
                                                                                            5: Input(name='a', value='1', type=None)
                                                                                            }
-
+    assert data_loader._promote_constants_to_variables(Path(_TEST_PATH_NON_GLOBAL)).file =="""volatile int [INPUT_0], [INPUT_1];\nvolatile short [INPUT_2];\nint [INPUT_3];\nchar [INPUT_4];\n\n\n\nint main() {\n    [INPUT_5];\n    return c;\n}"""
+    
     
     
