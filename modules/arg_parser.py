@@ -11,6 +11,7 @@ class ArgParser:
         self.parser = argparse.ArgumentParser()
         self.parser.add_argument("-c", "--compiler", help="Specify the compiler", default=self.DEFAULT_COMPILER)
         self.parser.add_argument("-n", "--num_cores", help="Specify the number of cores to use", default=1, type=int)
+        self.parser.add_argument("-t", "--threshold", help="Specify the threshold for the fuzzer", default=10, type=int)
        
         self.args = self.parser.parse_args()
         

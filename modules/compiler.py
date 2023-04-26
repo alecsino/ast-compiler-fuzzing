@@ -35,32 +35,33 @@ class Compiler:
         """Compiles a test with the current compiler and with the previous
         
         Arguments:
-            test {string} -- The path to the test to compile
+            test {Test} -- The test to compile
         
         Raises:
             FileNotFoundError: If the test does not exist
 
         Returns:
-            dict or None -- A dictionary with the number of lines of assembly for each compiler or None if the compilation failed
+            FuzzedTest -- The fuzzed test
         """
-        if not os.path.isfile(test):
+        
+        if not os.path.isfile(test.name):
             raise FileNotFoundError("File " + test + " does not exist")
 
         if not os.path.exists('tmp'):
             os.makedirs('tmp')
         
         stats = {
-            "last":  self.__compile_with(test, self.args.compiler)
+            "last":  self.__compile_with(test.name, self.args.compiler)
         }
 
         for i in self.args.older_compilers:
-            n = self.__compile_with(test, i)
+            n = self.__compile_with(test.name, i)
 
             if n == 0:
                 return None
             
             stats[i] = n
 
-        stats["file"] = os.path.basename(test)
-        return stats
+        stats["file"] = os.path.basename(test.name)
+        return FuzzedTest(test,stats)
 
