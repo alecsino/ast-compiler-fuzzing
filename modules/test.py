@@ -43,3 +43,14 @@ class Test:
     
     inputs: dict[int, Input]
     """Input values for the test."""
+
+
+@dataclass
+class FuzzedTest:
+    """The fuzzed test object."""
+    
+    test: Test
+    """Test object."""
+    
+    stats: dict[str, Any] | None
+    """Stats of the fuzzed test. If None, the test has not been compiled yet."""
