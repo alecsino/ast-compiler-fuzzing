@@ -1,8 +1,9 @@
 import os
 import subprocess
 from modules.test import FuzzedTest, Test, Input, Stats
+
 class Compiler:
-    FLAGS = ["-O3", "-fno-unroll-loops"]
+    FLAGS = ["-O3", "-fno-unroll-loops", "-w", "-std=gnu99"]
     """Compiles the tests with the current compiler and with the previous"""
     def __init__(self, args: any):
         self.args = args
@@ -10,20 +11,25 @@ class Compiler:
     
     def __compile_with(self, test, compiler: str):
         """Compiles a test with the specified version of the compiler into assembly"""
-        #get only the name of the file - removes path and extension
-        output_name = os.path.splitext(test.file_name)[0]
+
+        output_name = "tmp_" + os.path.splitext(test.file_name)[0]
+
+        dir = os.path.join(os.path.dirname(test.file_path), output_name)
         output_dir = os.path.join("tmp", output_name)
 
-        while os.path.isfile(output_dir + ".c"):
+        while os.path.isfile(dir+".c"):
             output_dir += "_"
         
-        with open(output_dir+".c", "w") as f:
+        with open(dir+".c", "w") as f:
             f.write(test.file_content)
 
-        try:
-            subprocess.run([compiler, output_dir+".c", "-S", "-o", output_dir+".s"] + self.FLAGS, check=True, stderr=subprocess.DEVNULL)
-        except subprocess.CalledProcessError:
-            print(f"Compilation of file {test.file_name} with compiler {compiler} failed.")
+        result = subprocess.run([compiler, dir+".c", "-S", "-o", output_dir+".s"] + self.FLAGS, stderr=subprocess.PIPE)
+        if result.stderr:
+            with open(os.path.join("err", "err_"+output_name)+".c", "w") as f:
+                f.write(test.file_content)
+                f.write(result.stderr.decode("utf-8"))
+            # print(f"Compilation of file {test.file_name} with compiler {compiler} failed.")
+            os.remove(dir+".c")
             return 0
 
         num_lines = 0
@@ -35,7 +41,7 @@ class Compiler:
             print(f"Compilation of file {test.file_name} with compiler {compiler} failed.")
         
         os.remove(output_dir+".s")
-        os.remove(output_dir+".c")
+        os.remove(dir+".c")
         return num_lines
         
 
@@ -51,6 +57,7 @@ class Compiler:
         Returns:
             FuzzedTest -- The fuzzed test
         """
+
         test, f_content = tuple
         
         if not os.path.isfile(test.name):
@@ -58,6 +65,9 @@ class Compiler:
 
         if not os.path.exists('tmp'):
             os.makedirs('tmp')
+
+        if not os.path.exists('err'):
+            os.makedirs('err')
         
         stats = Stats(file_path=test.name, file_name=os.path.basename(test.name), file_content=f_content)
         stats.add_compiler_stat("last", self.__compile_with(stats, self.args.compiler))

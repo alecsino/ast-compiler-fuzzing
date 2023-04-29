@@ -131,5 +131,6 @@ dmypy.json
 tests_files/
 tmp/
 data/
+err/
 
 .DS_Store
