@@ -1,3 +1,4 @@
+typedef int W;
 int a, b, d;
 volatile short c = 10;
 int array[10] = {1, 2, 4};

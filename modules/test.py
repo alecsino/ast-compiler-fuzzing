@@ -34,7 +34,7 @@ class Input:
     
     def _infer_len(self):
         """Infer length if not available and is array or string."""
-        if self.len:
+        if self.len != None:
             return self.len
         if is_array := re.match(r"{(?P<content>.*)}", self.value):
             return len(is_array.group('content').split(","))

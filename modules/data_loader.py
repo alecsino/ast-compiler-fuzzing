@@ -9,7 +9,7 @@ from modules.test import Input, Test, Stats
 _PATTERN_EXEC = r"int\s+main\s*\("
 _PATTERN_CONSTANTS_LOCAL_DEF = r"^\s+(?P<type>int|float|double|char|long|short)(?P<seq>(?:\s+(?P<name>\w+)(?P<is_array>\[(?P<size>[0-9]*)\])?\s*(?:=\s*(?P<value>.*)\s*)?(?:,|;))+)"
 _PATTERN_CONSTANTS_LOCAL_ASS = r"^\s+(?P<seq>(?:\s+(?P<name>\w+)(?P<is_array>\[(?P<size>[0-9]*)\])?\s*(?:=\s*(?P<value>.*)\s*)(?:,|;))+)"
-_PATTERN_CONSTANTS_GLOBAL_DEF = r"^(:?\w+\s+)?(?P<type>int|float|double|char|long|short)(?P<seq>(?:\s+(?P<name>\w+)(?P<is_array>\[(?P<size>[0-9]*)\])?\s*(?:=\s*(?P<value>.*)\s*)?(?:,|;))+)"
+_PATTERN_CONSTANTS_GLOBAL_DEF = r"^(:?\w+\b(?<!\btypedef)\s+)?(?P<type>int|float|double|char|long|short)(?P<seq>(?:\s+(?P<name>\w+)(?P<is_array>\[(?P<size>[0-9]*)\])?\s*(?:=\s*(?P<value>.*)\s*)?(?:,|;))+)"
 _PATTERN_CONSTANTS_GLOBAL_ASS = r"^(?P<seq>(?:\s+(?P<name>\w+)(?P<is_array>\[(?P<size>[0-9]*)\])?\s*(?:=\s*(?P<value>.*)\s*)?(?:,|;))+)"
 _PATTERN_CONSTANTS_GLOBAL_SEQ = r"(?P<initial_space>\s*)(?P<input>(?P<name>\w+)(?P<is_array>\[(?P<size>[0-9]*)\])?\s*(?:=\s*(?P<value>.*)\s*)?)(?P<has_next>,|;)(?P<final_space>\s*)"
 _POSSIBLE_MATCHES = [(re.compile(pattern), is_global, is_declared)  for pattern, is_global, is_declared in ((_PATTERN_CONSTANTS_LOCAL_DEF, 1, 1), (_PATTERN_CONSTANTS_LOCAL_ASS, 1, 0), (_PATTERN_CONSTANTS_GLOBAL_DEF, 0, 1), (_PATTERN_CONSTANTS_GLOBAL_ASS, 0, 0))]
@@ -71,19 +71,25 @@ class DataLoader:
         processed_file = ""
         
         with file.open(encoding="ISO-8859-1", errors='ignore') as f:
+            in_struct = False
             while original_line := f.readline():
                 match_line = None
+                
+                if  re.compile(r".*struct.*").match(original_line) :
+                    in_struct = True
+                if  re.compile(r"^}.*").match(original_line) and in_struct:
+                    in_struct = False
+                
+
                 for pattern, scope, is_declared  in _POSSIBLE_MATCHES:
-                    
-                    if match_line  := pattern.match(original_line) :
+                    if not in_struct and (match_line  := pattern.match(original_line)) :
                         processed_line = original_line
-                        
                         for i, match in enumerate(r_global_seq.finditer(match_line.group('seq')), start=len(inputs)):
                             inputs[i] =  Input(
                                                 name=match.group('name'), 
                                                 type=(match_line.group('type') if not match.group('is_array')  else match_line.group('type')) if match_line.groupdict().get('type') else None, 
-                                                value=match.group('value') if match.group('value') else "0", 
-                                                len=int(match.group('size')) if match.group('size') else None if match.group('is_array') else None, 
+                                                value=match.group('value') if match.group('value') else ("0" if not match.group('is_array')  else "{ 0 }"), 
+                                                len=(int(match.group('size')) if match.group('size') is not None and  match.group('size') != '' else None) if match.group('is_array') else None, 
                                                 scope=scope,
                                                 is_declared=is_declared
                                             ) 

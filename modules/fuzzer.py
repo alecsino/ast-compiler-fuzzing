@@ -47,7 +47,7 @@ class Fuzzer:
         file_content = test.file_pattern
 
         for i, input in inputs.items():
-            array = f"[{input.len}]" if input.len else ""
+            array = f"[{input.len}]" if input.len is not None else ""
             file_content = file_content.replace(f"[INPUT_{i}]", f'{input.name}{array} = {input.value}')
        
         return file_content

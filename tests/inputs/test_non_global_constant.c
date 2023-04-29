@@ -7,5 +7,6 @@ char string[] = "1023939";
 
 int main() {
     a = 1;
+    array[2] = 3;
     return c;
 }

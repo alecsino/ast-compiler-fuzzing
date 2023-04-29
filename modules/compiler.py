@@ -3,7 +3,7 @@ import subprocess
 from modules.test import FuzzedTest, Test, Input, Stats
 
 class Compiler:
-    FLAGS = ["-O3", "-fno-unroll-loops", "-w", "-std=gnu99"]
+    FLAGS = ["-O3", "-fno-unroll-loops", "-w"]
     """Compiles the tests with the current compiler and with the previous"""
     def __init__(self, args: any):
         self.args = args
