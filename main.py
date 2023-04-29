@@ -1,7 +1,4 @@
 import os
-import json
-from tqdm import tqdm
-import multiprocessing as mp
 from modules.compiler import Compiler
 from modules.data_loader import DataLoader
 from modules.arg_parser import ArgParser
@@ -22,8 +19,11 @@ def main():
     for file in os.listdir("data"):
         os.remove(os.path.join("data", file))
     
-    fuzzer = Fuzzer(tests=tests, compiler=compiler, num_cores=args.num_cores, n_threshold=args.n_threshold)
-    fuzzer.fuzz()
+    fuzzer = Fuzzer(tests=tests, compiler=compiler, num_cores=args.num_cores, n_threshold=args.threshold)
+    interesting_tests = fuzzer.fuzz()
+
+    data_loader.save_results(interesting_tests, args)
+        
     
     
     

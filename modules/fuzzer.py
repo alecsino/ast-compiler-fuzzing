@@ -1,6 +1,6 @@
-from modules.compiler import Compiler
+from modules.compiler import Compiler, Stats
 from modules.test import FuzzedTest, Test
-
+from tqdm import tqdm
 import multiprocessing as mp
 
 class Fuzzer:
@@ -15,51 +15,39 @@ class Fuzzer:
     def fuzz(self):
         """Fuzz the tests."""  
               
-        n_file_found = 0
-        
-        # init
-        list_of_fuzzed_tests = [ self.seed_file(test) for test in self.tests]
+        n_file_found = 0 
+        list_of_fuzzed_tests = [test for test in self.tests]
+        interesting_tests: list[Stats] = []
                     
-        while (n_file_found < self.threshold):
+        while (n_file_found < self.n_threshold):
                 with mp.Pool(self.num_cores) as pool:
-                        for test in pool.imap_unordered(self.compiler.compile_test, [test for test in list_of_fuzzed_tests]):
-                            if test.stats is not None and self._is_interesting(test.stats):
-                                list_of_fuzzed_tests += self.mutate(test)
-                                
+                        with tqdm(total=len(self.tests)) as pbar:
+                            for test in pool.imap_unordered(self.compiler.compile_test, [(test, self.mutate(test, test.inputs)) for test in list_of_fuzzed_tests]):
+                                pbar.update()
+                                if test.stats.n_tests() > 1 and test.stats.is_interesting():
+                                    list_of_fuzzed_tests.append(test.test)
+                                    interesting_tests.append(test.stats)
+                                    n_file_found += 1
+                                    
+                            pbar.close()
+        
+        return interesting_tests
                             
-    def mutate(self, test):
+    def mutate(self, test, inputs):
         """Mutate the test inputs.
 
         Args:
             test (Test): the test to mutate 
+            inputs (list[Input]): the inputs to mutate
             
         Returns:
             Test: the mutated test
         """
-                                
-    def seed_file(self, test):
-        """Seed the test files with boundary values.
         
-        Args:
-            test (Test): the test to mutate 
-        
-        Returns:
-            Test: the seeded test
-        """
-    
-    def _is_interesting(self, stats):
-        """Whether the ratio with respect to an older version is greater than 1.
+        file_content = test.file_pattern
 
-        Args:
-            stats (dict[str, Any]): the stats of the test
-
-        Returns:
-            bool: whether the test is interesting
-        """
-        
-        min_v = min([value for key, value in stats.items() if not key.startswith("file") and not key.startswith("last")])
-        stats["max_rateo"] = round(stats["last"] / min_v, 2)
-        if stats["max_rateo"] > 1:
-            return True
-        
-        return False
+        for i, input in inputs.items():
+            array = f"[{input.len}]" if input.len else ""
+            file_content = file_content.replace(f"[INPUT_{i}]", f'{input.name}{array} = {input.value}')
+       
+        return file_content
