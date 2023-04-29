@@ -1,6 +1,6 @@
 import os
 import subprocess
-
+import modules.test as FuzzedTest
 class Compiler:
     FLAGS = ["-O3", "-fno-unroll-loops"]
     """Compiles the tests with the current compiler and with the previous"""
@@ -51,18 +51,40 @@ class Compiler:
         if not os.path.exists('tmp'):
             os.makedirs('tmp')
         
-        stats = {
-            "last":  self.__compile_with(test.name, self.args.compiler)
-        }
+        stats = Stats(file_path=test.name, file_name=os.path.basename(test.name), compiler_stats={})
+        stats.add_compiler_stat("last", self.__compile_with(test.name, self.args.compiler))
 
         for i in self.args.older_compilers:
             n = self.__compile_with(test.name, i)
 
             if n == 0:
-                return None
+                continue
             
-            stats[i] = n
+            stats.add_compiler_stat(i, n)
 
-        stats["file"] = os.path.basename(test.name)
-        return FuzzedTest(test,stats)
+        return FuzzedTest(test, stats)
 
+
+
+class Stats:
+
+    file_path: str
+    """Full path of the file."""
+
+    file_name: str
+    """Name of the file."""
+
+    compiler_stats: dict[str, int]
+    """Stats of the compiler.
+    The key 'last' contain the stats of the current compiler.
+    The other keys are expected in the form '<compiler>-<version>'.
+    """
+
+    def add_compiler_stat(self, compiler: str, stat: int):
+        """Add a stat to the compiler stats.
+
+        Arguments:
+            compiler {str} -- The compiler to add the stat to.
+            stat {int} -- The stat to add.
+        """
+        self.compiler_stats[compiler] = stat

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Any
+from modules.compiler import Stats
 
 @dataclass
 class Input:
@@ -52,5 +53,5 @@ class FuzzedTest:
     test: Test
     """Test object."""
     
-    stats: dict[str, Any] | None
+    stats: Stats | None
     """Stats of the fuzzed test. If None, the test has not been compiled yet."""
