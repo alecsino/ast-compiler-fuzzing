@@ -131,3 +131,5 @@ dmypy.json
 tests/
 tmp/
 data/
+
+.DS_Store
