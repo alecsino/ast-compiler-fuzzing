@@ -62,7 +62,11 @@ class Test:
                     input.type =  self.inputs[j].type if input.name == self.inputs[j].name and input.scope >=  self.inputs[j].scope else None
                     if input.type:
                         break
+    
+    def has_valid_inputs(self) -> bool:
+        """Whether the input is valid for the test."""
         
+        return len(self.inputs) > 0 and len([input for input in self.inputs.values() if not input.type]) == 0
 
 @dataclasses.dataclass
 class Stats:
@@ -107,6 +111,7 @@ class Stats:
         """
         self.compiler_stats[compiler] = stat
 
+    @property
     def n_tests(self):
         """Returns the number of tests."""
         return len(self.compiler_stats)
@@ -132,8 +137,9 @@ class Stats:
                 self.max_rateo = (round(self.compiler_stats["last"] / min_v, 2), key)
                 break
         
-        if self.max_rateo[0] > 1:
+        if self.max_rateo[0] > 1.00:
             return True
+        
         return False
     
 
@@ -146,3 +152,13 @@ class FuzzedTest:
     
     stats: Stats | None
     """Stats of the fuzzed test. If None, the test has not been compiled yet."""
+    
+    mutated_inputs: list[Input]
+    """The mutated inputs of the test."""
+    
+    depth: int
+    """The depth of mutation."""
+    
+    breadth: int
+    """The bredth of mutation."""
+    

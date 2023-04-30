@@ -3,14 +3,25 @@ import subprocess
 from modules.test import FuzzedTest, Test, Input, Stats
 
 class Compiler:
-    FLAGS = ["-O3", "-fno-unroll-loops", "-w"]
     """Compiles the tests with the current compiler and with the previous"""
+    
+    FLAGS = ["-O3", "-fno-unroll-loops", "-w"]
+
     def __init__(self, args: any):
         self.args = args
         pass
     
     def __compile_with(self, test, compiler: str):
-        """Compiles a test with the specified version of the compiler into assembly"""
+        """
+        Compiles a test with the specified version of the compiler into assembly
+        
+        Arguments:
+            test {tuple} -- The stats object of the test to compile
+            compiler {str} -- The compiler to use
+
+        Returns:
+            int -- The number of lines of the assembly file
+        """
 
         output_name = "tmp_" + os.path.splitext(test.file_name)[0]
 
@@ -38,9 +49,14 @@ class Compiler:
             with open(output_dir+".s") as f:
                 num_lines = len(f.readlines())
         except FileNotFoundError:
-            print(f"Compilation of file {test.file_name} with compiler {compiler} failed.")
+            # print(f"Compilation of file {test.file_name} with compiler {compiler} failed.")
+            pass
         
-        os.remove(output_dir+".s")
+        try:
+            os.remove(output_dir+".s")
+        except OSError as e:
+           pass
+
         os.remove(dir+".c")
         return num_lines
         
@@ -49,7 +65,7 @@ class Compiler:
         """Compiles a test with the current compiler and with the previous
         
         Arguments:
-            test {Test} -- The test to compile
+            tuple {tuple} -- The test object to compile, its content and its inputs
         
         Raises:
             FileNotFoundError: If the test does not exist
@@ -57,9 +73,8 @@ class Compiler:
         Returns:
             FuzzedTest -- The fuzzed test
         """
-
-        test, f_content = tuple
         
+        test, f_content, new_inputs, depth, breadth = tuple
         if not os.path.isfile(test.name):
             raise FileNotFoundError("File " + test + " does not exist")
 
@@ -80,4 +95,4 @@ class Compiler:
             
             stats.add_compiler_stat(i, n)
 
-        return FuzzedTest(test, stats)
+        return FuzzedTest(test=test, stats=stats, mutated_inputs=new_inputs, depth=depth, breadth=breadth)

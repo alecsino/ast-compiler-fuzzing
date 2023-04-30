@@ -105,6 +105,7 @@ class DataLoader:
     
     def save_results(self, results: list[Stats], args):
         """Save the results of the interesting tests to a file."""
+        
         for s in results:
             with open(s.file_path, "r") as f:
                 file_c = f.read()
