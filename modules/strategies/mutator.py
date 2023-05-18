@@ -12,6 +12,10 @@ class Mutator:
         
         
     def mutate(self, input: Input) -> str:
-        return self.strategies[random.randint(0, len(self.strategies)-1)].mutate(input)
-     
+        
+        try: 
+            return self.strategies[random.randint(0, len(self.strategies)-1)].mutate(input)
+        except ValueError as e:
+            pass
+        return self.strategies[0].mutate(input)
         

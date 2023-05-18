@@ -5,6 +5,8 @@ import random
 
 class Modification:
     
+    MAX_TRIES = 10
+    
     def mutate(self, input: Input) -> str:
         """
         Generate a random value for the input.
@@ -18,16 +20,15 @@ class Modification:
         Returns:
             str: the random value as a string
         """
-        
         match input.type:
             case constants.Type.INT:
-                return self._generate_numb(input.value, constants.Short, int, random.randint) if input.len is None else "{" + ", ".join([self._generate_numb(input.value, constants.Short, int, random.randint) for i in input.value.split(", ")]) + "}"
+                return self._generate_numb(input.value, constants.Short, int, random.randint) if input.len is None else "{" + ", ".join([self._generate_numb(i, constants.Short, int, random.randint) for i in input.value.replace("{", "").replace("}", "").split(", ")]) + "}"
             case constants.Type.SHORT:
-                return self._generate_numb(input.value, constants.Short, int, random.randint) if input.len is None else "{" + ", ".join([self._generate_numb(input.value, constants.Short, int, random.randint) for i in input.value.split(", ")]) + "}"
+                return self._generate_numb(input.value, constants.Short, int, random.randint) if input.len is None else "{" + ", ".join([self._generate_numb(i, constants.Short, int, random.randint) for i in input.value.replace("{", "").replace("}", "").split(", ")]) + "}"
             case constants.Type.LONG:
-                return self._generate_numb(input.value, constants.Int, int, random.randint) if input.len is None else "{" + ", ".join([self._generate_numb(input.value, constants.Int, int, random.randint) for i in input.value.split(", ")]) + "}"
+                return self._generate_numb(input.value, constants.Int, int, random.randint) if input.len is None else "{" + ", ".join([self._generate_numb(i, constants.Int, int, random.randint) for i in input.value.replace("{", "").replace("}", "").split(", ")]) + "}"
             case constants.Type.FLOAT:
-                return self._generate_numb(input.value, constants.Float, float, random.uniform) if input.len is None else "{" + ", ".join([self._generate_numb(i, constants.Float, float, random.uniform) for i in input.value.split(", ")]) + "}"
+                return self._generate_numb(input.value, constants.Float, float, random.uniform) if input.len is None else "{" + ", ".join([self._generate_numb(i, constants.Float, float, random.uniform) for i in input.value.replace("{", "").replace("}", "").split(", ")]) + "}"
             case constants.Type.DOUBLE:
                 return self._generate_numb(input.value, constants.Double, float, random.uniform) if input.len is None else "{" + ", ".join([self._generate_numb(i, constants.Double, float, random.uniform) for i in input.value.split(", ")]) + "}"
             case constants.Type.CHAR:
@@ -49,12 +50,23 @@ class Modification:
         Returns:
             str: the new value
         """        
-        rand_val = random_generator(type.MIN, type.MAX)
+        rand_val = random_generator(type_class.MIN, type_class.MAX)
         
-        while type.MIN > converter(input.value) + rand_val or converter(input.value) + rand_val > type.MAX:
-                rand_val = random.uniform(type.MIN , type.MAX)
-                
-        return str(converter(input.value)+ rand_val)
+        # some tests contain the value "INFINITY that are not valid numbers
+        if value == "INFINITY":
+            raise ValueError(f"Value {value} not supported")
+        
+        found = False
+        for i in range(0, self.MAX_TRIES):
+            if type_class.MIN <= converter(value) + rand_val <= type_class.MAX:
+                found = True
+                break
+            rand_val = random.uniform(type_class.MIN , type_class.MAX)
+           
+        if not found:
+            raise ValueError(f"Value {value} not supported")
+        
+        return str(converter(value)+ rand_val)
 
     def _generate_string(self, value, max_len) -> str:
         """
@@ -69,7 +81,8 @@ class Modification:
         """        
         character = random.choice(constants.CHARACTERS) 
         if len(value + character) > max_len:
-            value[random.randint(0, max_len-1)] = character
+            index = random.randint(0, max_len-1)
+            value = value[:index] + character + value[index + 1:]
         else:
             value += character
         return value

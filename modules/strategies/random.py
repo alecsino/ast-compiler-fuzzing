@@ -5,7 +5,7 @@ import random
 
 class Random:
     
-    def muatate(self, input: Input) -> str:
+    def mutate(self, input: Input) -> str:
         """
         Generate a random value for the input.
         
@@ -20,6 +20,7 @@ class Random:
         """
         
         match input.type:
+            
             case constants.Type.INT:
                     return  str(random.randint(constants.INT_MIN, constants.INT_MAX)) if input.len is None else "{" + (str(random.randint(constants.INT_MIN, constants.INT_MAX)) + ", " * input.len) + "}"     
             case constants.Type.SHORT:
