@@ -1,0 +1,36 @@
+from modules.test import Input
+from modules import constants
+import random
+
+
+class Random:
+    
+    def muatate(self, input: Input) -> str:
+        """
+        Generate a random value for the input.
+        
+        Args:
+            input (Input): the inputs to generate a random value for
+            
+        Raises:
+            ValueError: if the type of the input is not supported
+        
+        Returns:
+            str: the random value as a string
+        """
+        
+        match input.type:
+            case constants.Type.INT:
+                    return  str(random.randint(constants.INT_MIN, constants.INT_MAX)) if input.len is None else "{" + (str(random.randint(constants.INT_MIN, constants.INT_MAX)) + ", " * input.len) + "}"     
+            case constants.Type.SHORT:
+                    return  str(random.randint(constants.SHORT_MIN, constants.SHORT_MAX)) if input.len is None else  "{" + (str(random.randint(constants.SHORT_MIN, constants.SHORT_MAX)) + ", " * input.len) + "}" 
+            case constants.Type.LONG:
+                return str(random.randint(constants.LONG_MIN, constants.LONG_MAX)) if input.len is None else "{" + (str(random.randint(constants.LONG_MIN, constants.LONG_MAX)) + ", " * input.len) + "}"
+            case constants.Type.FLOAT:
+                return str(random.uniform(constants.FLOAT_MIN, constants.FLOAT_MAX)) if input.len is None else "{" + (str(random.uniform(constants.FLOAT_MIN, constants.FLOAT_MAX)) + ", " * input.len) + "}"
+            case constants.Type.DOUBLE:
+                return str(random.uniform(constants.DOUBLE_MIN, constants.DOUBLE_MAX)) if input.len is None else "{" + (str(random.uniform(constants.DOUBLE_MIN, constants.DOUBLE_MAX)) + ", " * input.len) + "}"
+            case constants.Type.CHAR:
+                return "\'" + random.choice(constants.CHARACTERS) + "\'" if input.len is None else "\"" + (random.choice (constants.CHARACTERS) * input.len) + "\""
+            case _:
+                 raise ValueError(f"Type {input.type} not supported")

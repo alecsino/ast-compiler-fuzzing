@@ -1,5 +1,6 @@
 import random
 from modules.compiler import Compiler, Stats
+from modules.strategies.mutator import Mutator
 from modules.test import FuzzedTest, Input, Test
 from modules import constants
 from tqdm import tqdm
@@ -8,11 +9,12 @@ import multiprocessing as mp
 class Fuzzer:
     """The fuzzer."""
     
-    def __init__(self, tests: list[Test], compiler: Compiler, num_cores: int, n_threshold: int = 50):
+    def __init__(self, tests: list[Test], compiler: Compiler, mutator: Mutator,  num_cores: int, n_threshold: int = 50):
         self.tests = tests
         self.compiler = compiler
         self.num_cores = num_cores
         self.n_threshold = n_threshold
+        self.mutator = mutator
     
     def fuzz(self):
         """
@@ -93,38 +95,9 @@ class Fuzzer:
         new_inputs = test.mutated_inputs.copy()
         
         if depth != test.depth:
-             new_inputs[left_most].value = self.random_value(test.mutated_inputs[left_most])
+             new_inputs[left_most].value = self.mutator.mutate(test.mutated_inputs[left_most])
         else:
-             new_inputs[(left_most - breadth + len(test.mutated_inputs)) % len(test.mutated_inputs)].value = self.random_value(test.mutated_inputs[(left_most - breadth + len(test.mutated_inputs))% len(test.mutated_inputs)])
+             new_inputs[(left_most - breadth + len(test.mutated_inputs)) % len(test.mutated_inputs)].value = self.mutator.mutate(test.mutated_inputs[(left_most - breadth + len(test.mutated_inputs))% len(test.mutated_inputs)])
         
         return new_inputs
     
-    def random_value(self, input: Input) -> str:
-        """
-        Generate a random value for the input.
-        
-        Args:
-            input (Input): the inputs to generate a random value for
-            
-        Raises:
-            ValueError: if the type of the input is not supported
-        
-        Returns:
-            str: the random value as a string
-        """
-        
-        match input.type:
-            case constants.Type.INT:
-                    return  str(random.randint(constants.INT_MIN, constants.INT_MAX)) if input.len is None else "{" + (str(random.randint(constants.INT_MIN, constants.INT_MAX)) + ", " * input.len) + "}"     
-            case constants.Type.SHORT:
-                    return  str(random.randint(constants.SHORT_MIN, constants.SHORT_MAX)) if input.len is None else  "{" + (str(random.randint(constants.SHORT_MIN, constants.SHORT_MAX)) + ", " * input.len) + "}" 
-            case constants.Type.LONG:
-                return str(random.randint(constants.LONG_MIN, constants.LONG_MAX)) if input.len is None else "{" + (str(random.randint(constants.LONG_MIN, constants.LONG_MAX)) + ", " * input.len) + "}"
-            case constants.Type.FLOAT:
-                return str(random.uniform(constants.FLOAT_MIN, constants.FLOAT_MAX)) if input.len is None else "{" + (str(random.uniform(constants.FLOAT_MIN, constants.FLOAT_MAX)) + ", " * input.len) + "}"
-            case constants.Type.DOUBLE:
-                return str(random.uniform(constants.DOUBLE_MIN, constants.DOUBLE_MAX)) if input.len is None else "{" + (str(random.uniform(constants.DOUBLE_MIN, constants.DOUBLE_MAX)) + ", " * input.len) + "}"
-            case constants.Type.CHAR:
-                return "\'" + random.choice(constants.CHARACTERS) + "\'" if input.len is None else "\"" + (random.choice (constants.CHARACTERS) * input.len) + "\""
-            case _:
-                 raise ValueError(f"Type {input.type} not supported")
