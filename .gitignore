@@ -134,3 +134,6 @@ data/
 err/
 
 .DS_Store
+
+.vscode/
+*.png
