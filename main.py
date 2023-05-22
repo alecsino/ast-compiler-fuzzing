@@ -10,19 +10,32 @@ def main():
     args = arg_parser.args 
 
     compiler = Compiler(args)
-    data_loader = DataLoader()
+    data_loader = DataLoader(args)
     mutator = Mutator()
     tests = data_loader.tests()
     
-    if not os.path.exists('data'):
-        os.makedirs('data')
+    folders_used = ["data", "err", ".tmp"]
+    for folder in folders_used:
+        if not os.path.exists(folder):
+            os.makedirs(folder)
 
-    for file in os.listdir("data"):
-        os.remove(os.path.join("data", file))
-    
+        for file in os.listdir(folder):
+            os.remove(os.path.join(folder, file))
+
     fuzzer = Fuzzer(tests=tests, compiler=compiler, num_cores=args.num_cores, n_threshold=args.threshold, mutator=mutator)
+
     interesting_tests = fuzzer.fuzz()
+    print(f"Found {len(interesting_tests)} interesting tests")
     data_loader.save_results(interesting_tests, args)
+
+    # Clean up - removes all the files created by the fuzzer in the tests folder
+    # remove all files that begins with "tmp_"
+    print("Clean up in progress")
+    for root, dirs, files in os.walk(args.data):
+        for file in files:
+            if file.startswith("tmp_"):
+                os.remove(os.path.join(root, file))
+
         
     
     

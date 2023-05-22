@@ -135,5 +135,6 @@ err/
 
 .DS_Store
 
+.tmp/
 .vscode/
 *.png

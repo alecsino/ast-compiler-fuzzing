@@ -26,7 +26,7 @@ class Compiler:
         output_name = "tmp_" + os.path.splitext(test.file_name)[0]
 
         dir = os.path.join(os.path.dirname(test.file_path), output_name)
-        output_dir = os.path.join("tmp", output_name)
+        output_dir = os.path.join(".tmp", output_name)
 
         while os.path.isfile(dir+".c"):
             output_dir += "_"
@@ -77,12 +77,6 @@ class Compiler:
         test, f_content, new_inputs, depth, breadth = tuple
         if not os.path.isfile(test.name):
             raise FileNotFoundError("File " + test + " does not exist")
-
-        if not os.path.exists('tmp'):
-            os.makedirs('tmp')
-
-        if not os.path.exists('err'):
-            os.makedirs('err')
         
         stats = Stats(file_path=test.name, file_name=os.path.basename(test.name), file_content=f_content)
         stats.add_compiler_stat("last", self.__compile_with(stats, self.args.compiler))
