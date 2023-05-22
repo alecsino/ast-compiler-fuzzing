@@ -1,3 +1,4 @@
+from collections import defaultdict
 import random
 from modules.compiler import Compiler, Stats
 from modules.strategies.mutator import Mutator
@@ -29,6 +30,7 @@ class Fuzzer:
         depth = 0
         breadth = 0
         list_of_fuzzed_tests = [(test, test.inputs, depth, breadth) for test in self.tests if test.has_valid_inputs()] # start the seed with the original tests
+        list_of_fuzzed_tests = self.find_best_inputs(list_of_fuzzed_tests, n_iteration=1) # start the seed with the original tests
         
         interesting_tests: list[Stats] = []
         n_iteration = 0
@@ -73,6 +75,19 @@ class Fuzzer:
             pbar.close()
             return interesting_tests
                             
+    def find_best_inputs(self, list_of_fuzzed_tests: list, n_iteration: int = 100) -> list[Input]:
+        
+        tests = defaultdict(list)
+        
+        for i in range(n_iteration):
+                with mp.Pool(self.num_cores) as pool:
+                    with tqdm(total=len(list_of_fuzzed_tests)) as pbar:
+                            for fuzzed_test in pool.imap_unordered(self.compiler.compile_test, [(test, self.apply(test, test.inputs), mutated_inputs, depth, breadth ) for test, mutated_inputs, depth, breadth in list_of_fuzzed_tests]):
+                                tests[fuzzed_test.test.name].append((fuzzed_test.test, self.mutate_inputs(fuzzed_test) , fuzzed_test.depth, fuzzed_test.breadth, fuzzed_test.stats))
+                                pbar.update()
+                    pbar.close()
+        return [max(tests[test], key=lambda x: x[4].max_rateo[0]) for test in tests]
+    
     def apply(self, test: Test, inputs: dict[int, Input]) -> str:
         """
         Apply to the test the inputs.
@@ -93,14 +108,15 @@ class Fuzzer:
     
         return file_content
 
-    def mutate_inputs(self, test: FuzzedTest, depth: int, breadth: int) -> dict[int, Input]:
+    def mutate_inputs(self, test: FuzzedTest, depth: int | None= None, breadth: int | None= None) -> dict[int, Input]:
         """
         Mutate the test inputs.
         NOTE: the mutation is either done vertically or horizontally.
         
         Args:
             test (Test): the original test
-            inputs (list[Input]): the inputs to the fuzzed test to mutate
+            depth (int): the depth of the mutation. If None, mutate all the inputs
+            breadth (int): the breadth of the mutation. If None, mutate all the inputs
             
         Returns:
             list[Input]: the mutated inputs
@@ -109,9 +125,12 @@ class Fuzzer:
         left_most = len(test.mutated_inputs) - 1 
         new_inputs = test.mutated_inputs.copy()
         
-        if depth != test.depth:
+        if depth is None or breadth is None: # mutate all the inputs
+            for i in range(len(test.mutated_inputs)):
+                new_inputs[i].value = self.mutator.mutate(test.mutated_inputs[i])
+        elif depth != test.depth: # mutate vertically
              new_inputs[left_most].value = self.mutator.mutate(test.mutated_inputs[left_most])
-        else:
+        else: # mutate horizontally
              new_inputs[(left_most - breadth + len(test.mutated_inputs)) % len(test.mutated_inputs)].value = self.mutator.mutate(test.mutated_inputs[(left_most - breadth + len(test.mutated_inputs))% len(test.mutated_inputs)])
         
         return new_inputs
