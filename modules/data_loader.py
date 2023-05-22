@@ -19,20 +19,19 @@ _FILE_EXTENSION = '**/*.[c cpp]'
 class DataLoader:
     """Class for importing and preprocessing tests."""
     
-    def __init__(self):
+    def __init__(self, args):
         # Constructor code goes here
+        self.args = args
         pass
     
-    def tests(self, directory: str = "./tests_files") -> list[Test]:
+    def tests(self) -> list[Test]:
         """Collect the processed tests from the given directory.
-
-        Args:
-            directory (str, optional): directory of tests. Defaults to "./tests".
 
         Returns:
             list[Tests]: list of processed tests.
         """        
-
+        directory = self.args.data
+        print(f"Analyzing tests in {directory}")
         test_directory = Path(directory)
         executable_tests = [test_file for test_file in test_directory.glob(_FILE_EXTENSION) if self._is_executable(test_file)]
         tests = [self._promote_constants_to_variables(test_file) for test_file in  executable_tests]
