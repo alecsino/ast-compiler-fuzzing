@@ -24,3 +24,23 @@ class Type(str, enum.Enum):
     LONG = 'long'
     CHAR = 'char'
     
+    
+class Int:
+    MIN = INT_MIN
+    MAX = INT_MAX
+
+class Float:
+    MIN = FLOAT_MIN
+    MAX = FLOAT_MAX
+
+class Double:
+    MIN = DOUBLE_MIN
+    MAX = DOUBLE_MAX
+
+class Short:
+    MIN = SHORT_MIN
+    MAX = SHORT_MAX
+
+class Long:
+    MIN = LONG_MIN
+    MAX = LONG_MAX
