@@ -108,19 +108,18 @@ class DataLoader:
                     
         return Test(name=str(file), file_pattern=processed_file, inputs=inputs)
     
-    def save_results(self, results: list[Stats], args):
+    def save_results(self, s: Stats):
         """Save the results of the interesting tests to a file."""
-        
-        for s in results:
-            with open(s.file_path, "r") as f:
-                file_c = f.read()
-            diff = difflib.ndiff(s.file_content.splitlines(keepends=True), file_c.splitlines(keepends=True))
 
-            output_dir = os.path.join("data", os.path.splitext(s.file_name)[0]) + ".txt"
-            while os.path.isfile(output_dir):
-                output_dir += "_"
-            
-            csv_line = f"{s.file_name},{args.compiler},{s.max_rateo[1]},{s.compiler_stats['last']},{s.compiler_stats[s.max_rateo[1]]},{s.max_rateo[0]}\n"
-            with open(output_dir, "w") as f:
-                f.writelines(csv_line)
-                f.writelines(diff)
+        with open(s.file_path, "r") as f:
+            file_c = f.read()
+        diff = difflib.ndiff(s.file_content.splitlines(keepends=True), file_c.splitlines(keepends=True))
+
+        output_dir = os.path.join("data", os.path.splitext(s.file_name)[0]) + ".txt"
+        while os.path.isfile(output_dir):
+            output_dir += "_"
+        
+        csv_line = f"{s.file_name},{self.args.compiler},{s.max_rateo[1]},{s.compiler_stats['last']},{s.compiler_stats[s.max_rateo[1]]},{s.max_rateo[0]}\n"
+        with open(output_dir, "w") as f:
+            f.writelines(csv_line)
+            f.writelines(diff)

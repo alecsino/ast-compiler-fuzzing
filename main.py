@@ -22,11 +22,10 @@ def main():
         for file in os.listdir(folder):
             os.remove(os.path.join(folder, file))
 
-    fuzzer = Fuzzer(tests=tests, compiler=compiler, num_cores=args.num_cores, n_threshold=args.threshold, mutator=mutator)
+    fuzzer = Fuzzer(tests=tests, compiler=compiler, num_cores=args.num_cores, n_threshold=args.threshold, mutator=mutator, data_loader=data_loader)
 
     interesting_tests = fuzzer.fuzz()
     print(f"Found {len(interesting_tests)} interesting tests")
-    data_loader.save_results(interesting_tests, args)
 
     # Clean up - removes all the files created by the fuzzer in the tests folder
     # remove all files that begins with "tmp_"

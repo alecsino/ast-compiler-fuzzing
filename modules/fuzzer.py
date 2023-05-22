@@ -9,12 +9,13 @@ import multiprocessing as mp
 class Fuzzer:
     """The fuzzer."""
     
-    def __init__(self, tests: list[Test], compiler: Compiler, mutator: Mutator,  num_cores: int, n_threshold: int = 10):
+    def __init__(self, tests: list[Test], compiler: Compiler, mutator: Mutator,  num_cores: int, n_threshold: int = 10, data_loader = None):
         self.tests = tests
         self.compiler = compiler
         self.num_cores = num_cores
         self.n_threshold = n_threshold
         self.mutator = mutator
+        self.data_loader = data_loader
     
     def fuzz(self):
         """
@@ -51,6 +52,7 @@ class Fuzzer:
                                             pbar.update()
                                             n_file_found += 1
                                             pbar.set_description(f"Found new mutation: {fuzzed_test.test.name}")
+                                            self.data_loader.save_results(fuzzed_test.stats)
                                             interesting_tests.append(fuzzed_test.stats)
                                             continue
                                         else:
