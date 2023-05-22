@@ -43,12 +43,18 @@ class Fuzzer:
                             for fuzzed_test in fuzzed_tests:
                                 tqdm.write(fuzzed_test.test.name)
                                 if fuzzed_test.stats.n_tests > 1 and fuzzed_test.stats.is_interesting():
+
                                     if fuzzed_test.stats.max_rateo[0] > 1.50:
-                                        pbar.update()
-                                        n_file_found += 1
-                                        pbar.set_description(f"Found new file: {fuzzed_test.test.name}")
-                                        interesting_tests.append(fuzzed_test.stats)
-                                        continue
+                                        tqdm.write(f"Checking {fuzzed_test.test.name}")
+
+                                        if fuzzed_test.is_asan_safe(self.compiler):
+                                            pbar.update()
+                                            n_file_found += 1
+                                            pbar.set_description(f"Found new mutation: {fuzzed_test.test.name}")
+                                            interesting_tests.append(fuzzed_test.stats)
+                                            continue
+                                        else:
+                                            tqdm.write(f"Mutation for {fuzzed_test.test.name} is not ASAN safe")
 
                                     list_of_fuzzed_tests.append((fuzzed_test.test, self.mutate_inputs(fuzzed_test,
                                                                                                     fuzzed_test.depth + 1, 

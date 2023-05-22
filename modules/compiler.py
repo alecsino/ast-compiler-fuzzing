@@ -10,6 +10,35 @@ class Compiler:
     def __init__(self, args: any):
         self.args = args
         pass
+
+    def is_asan_safe(self, test: Stats, compiler: str):
+        output_name = "tmp_asan_" + os.path.splitext(test.file_name)[0]
+        dir = os.path.join(os.path.dirname(test.file_path), output_name)
+        output_dir = os.path.join(".tmp", output_name)
+
+        while os.path.isfile(dir+".c"):
+            output_dir += "_"
+        
+        with open(dir+".c", "w") as f:
+            f.write(test.file_content)
+
+        if compiler == "last":
+            compiler = self.args.compiler
+
+        result = subprocess.run([compiler, dir+".c", "-fsanitize=address", "-o", output_dir] + self.FLAGS, stderr=subprocess.PIPE)
+        if result.stderr:
+            return False
+        
+        os.remove(dir+".c")
+
+        result = subprocess.run(["./"+output_dir], stderr=subprocess.PIPE)
+        if result.stderr:
+            return False
+        
+        os.remove(output_dir)
+
+        return True
+
     
     def __compile_with(self, test, compiler: str):
         """

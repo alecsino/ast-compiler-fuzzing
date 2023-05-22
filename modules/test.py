@@ -161,4 +161,7 @@ class FuzzedTest:
     
     breadth: int
     """The bredth of mutation."""
+
+    def is_asan_safe(self, compiler) -> bool:
+        return compiler.is_asan_safe(self.stats, "last") and compiler.is_asan_safe(self.stats, self.stats.max_rateo[1])
     
