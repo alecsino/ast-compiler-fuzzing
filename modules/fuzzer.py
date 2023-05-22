@@ -30,7 +30,7 @@ class Fuzzer:
         depth = 0
         breadth = 0
         list_of_fuzzed_tests = [(test, test.inputs, depth, breadth) for test in self.tests if test.has_valid_inputs()] # start the seed with the original tests
-        list_of_fuzzed_tests = self.find_best_inputs(list_of_fuzzed_tests, n_iteration=1) # start the seed with the original tests
+        # list_of_fuzzed_tests = [(test, mutated_inputs, depth, breadth) for test, mutated_inputs, depth, breadth, _ in  self.find_best_inputs(list_of_fuzzed_tests, n_iteration=1)] # start the seed with the original tests
         
         interesting_tests: list[Stats] = []
         n_iteration = 0
@@ -38,7 +38,7 @@ class Fuzzer:
 
         pbar = tqdm(total=self.n_threshold)
         try:
-            while (n_iteration < 1 and n_file_found < self.n_threshold):
+            while (n_iteration < 100 and n_file_found < self.n_threshold):
                     with mp.Pool(self.num_cores) as pool:
                             fuzzed_tests = pool.imap_unordered(self.compiler.compile_test, [(test, self.apply(test, test.inputs), mutated_inputs, depth, breadth ) for test, mutated_inputs, depth, breadth in list_of_fuzzed_tests])
                             n_iteration += 1
@@ -77,8 +77,9 @@ class Fuzzer:
                             
     def find_best_inputs(self, list_of_fuzzed_tests: list, n_iteration: int = 100) -> list[Input]:
         
-        tests = defaultdict(list)
+        print("Mutating the inputs of the tests to find the best inputs")
         
+        tests = defaultdict(list)
         for i in range(n_iteration):
                 with mp.Pool(self.num_cores) as pool:
                     with tqdm(total=len(list_of_fuzzed_tests)) as pbar:
