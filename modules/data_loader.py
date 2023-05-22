@@ -72,6 +72,7 @@ class DataLoader:
         
         with file.open(encoding="ISO-8859-1", errors='ignore') as f:
             in_struct = False
+            in_union = False
             while original_line := f.readline():
                 match_line = None
                 
@@ -80,9 +81,14 @@ class DataLoader:
                 if  re.compile(r"^}.*").match(original_line) and in_struct:
                     in_struct = False
                 
+                if  re.compile(r".*union.*").match(original_line) :
+                    in_union = True
+                if  re.compile(r"^}.*").match(original_line) and in_struct:
+                    in_union = False
+                
 
                 for pattern, scope, is_declared  in _POSSIBLE_MATCHES:
-                    if not in_struct and (match_line  := pattern.match(original_line)) :
+                    if not in_struct and not in_union and (match_line  := pattern.match(original_line)) :
                         processed_line = original_line
                         for i, match in enumerate(r_global_seq.finditer(match_line.group('seq')), start=len(inputs)):
                             inputs[i] =  Input(
