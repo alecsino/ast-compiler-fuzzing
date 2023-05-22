@@ -68,7 +68,6 @@ class Fuzzer:
                                     list_of_fuzzed_tests.append((fuzzed_test.test, self.mutate_inputs(fuzzed_test, 
                                                                                                     fuzzed_test.depth, 
                                                                                                     fuzzed_test.breadth + 1), fuzzed_test.depth, fuzzed_test.breadth + 1))
-                            self.mutator.plot()
         except KeyboardInterrupt:
              pass
         finally:     
