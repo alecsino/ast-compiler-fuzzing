@@ -55,6 +55,7 @@ class Fuzzer:
                                                                                                       fuzzed_test.depth, 
                                                                                                       fuzzed_test.breadth + 1), fuzzed_test.depth, fuzzed_test.breadth + 1))
                             pbar.close()
+                            self.mutator.plot()
         
         return interesting_tests
                             
