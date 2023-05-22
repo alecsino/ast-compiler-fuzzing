@@ -9,7 +9,7 @@ import multiprocessing as mp
 class Fuzzer:
     """The fuzzer."""
     
-    def __init__(self, tests: list[Test], compiler: Compiler, mutator: Mutator,  num_cores: int, n_threshold: int = 50):
+    def __init__(self, tests: list[Test], compiler: Compiler, mutator: Mutator,  num_cores: int, n_threshold: int = 10):
         self.tests = tests
         self.compiler = compiler
         self.num_cores = num_cores
@@ -30,34 +30,40 @@ class Fuzzer:
         list_of_fuzzed_tests = [(test, test.inputs, depth, breadth) for test in self.tests if test.has_valid_inputs()] # start the seed with the original tests
         
         interesting_tests: list[Stats] = []
-        unique_files: list[str] = []
         n_iteration = 0
-        while (n_iteration < 1 and n_file_found < self.n_threshold):
-                with mp.Pool(self.num_cores) as pool:
-                        with tqdm(total=len(list_of_fuzzed_tests)) as pbar:
+        print(f"Start fuzzing {len(list_of_fuzzed_tests)} tests with {self.num_cores} cores. Threshold: {self.n_threshold}")
+
+        pbar = tqdm(total=self.n_threshold)
+        try:
+            while (n_iteration < 1 and n_file_found < self.n_threshold):
+                    with mp.Pool(self.num_cores) as pool:
                             fuzzed_tests = pool.imap_unordered(self.compiler.compile_test, [(test, self.apply(test, test.inputs), mutated_inputs, depth, breadth ) for test, mutated_inputs, depth, breadth in list_of_fuzzed_tests])
                             n_iteration += 1
                             list_of_fuzzed_tests = []
                             for fuzzed_test in fuzzed_tests:
-                                pbar.update()
+                                tqdm.write(fuzzed_test.test.name)
                                 if fuzzed_test.stats.n_tests > 1 and fuzzed_test.stats.is_interesting():
-                                    list_of_fuzzed_tests.append((fuzzed_test.test, self.mutate_inputs(fuzzed_test,
-                                                                                                      fuzzed_test.depth + 1, 
-                                                                                                      fuzzed_test.breadth) , fuzzed_test.depth + 1, fuzzed_test.breadth))
-                                    
-                                    if fuzzed_test.test.name not in unique_files:
-                                        unique_files.append(fuzzed_test.test.name)
-                                        n_file_found += 1 if fuzzed_test.stats.max_rateo[0] > 1.50 else 0
-                                        # print(f"Found new file: {fuzzed_test.test.name}")
+                                    if fuzzed_test.stats.max_rateo[0] > 1.50:
+                                        pbar.update()
+                                        n_file_found += 1
+                                        pbar.set_description(f"Found new file: {fuzzed_test.test.name}")
                                         interesting_tests.append(fuzzed_test.stats)
+                                        continue
+
+                                    list_of_fuzzed_tests.append((fuzzed_test.test, self.mutate_inputs(fuzzed_test,
+                                                                                                    fuzzed_test.depth + 1, 
+                                                                                                    fuzzed_test.breadth) , fuzzed_test.depth + 1, fuzzed_test.breadth))
+                                    
                                 else:
                                     list_of_fuzzed_tests.append((fuzzed_test.test, self.mutate_inputs(fuzzed_test, 
-                                                                                                      fuzzed_test.depth, 
-                                                                                                      fuzzed_test.breadth + 1), fuzzed_test.depth, fuzzed_test.breadth + 1))
-                            pbar.close()
+                                                                                                    fuzzed_test.depth, 
+                                                                                                    fuzzed_test.breadth + 1), fuzzed_test.depth, fuzzed_test.breadth + 1))
                             self.mutator.plot()
-        
-        return interesting_tests
+        except KeyboardInterrupt:
+             pass
+        finally:     
+            pbar.close()
+            return interesting_tests
                             
     def apply(self, test: Test, inputs: dict[int, Input]) -> str:
         """
