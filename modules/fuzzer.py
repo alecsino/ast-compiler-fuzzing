@@ -1,12 +1,16 @@
 from collections import defaultdict
 import random
+from typing import NamedTuple
 from modules.compiler import Compiler, Stats
 from modules.strategies.mutator import Mutator
 from modules.test import FuzzedTest, Input, Test
 from modules import constants
 from tqdm import tqdm
 import multiprocessing as mp
+import traceback
 
+FuzzedTestTuple = NamedTuple("FuzzedTestTuple", [("test", Test), ("mutated_inputs", dict[int, Input]), ("depth", int), ("breadth", int), ("stats", Stats)])
+    
 class Fuzzer:
     """The fuzzer."""
     
@@ -29,7 +33,7 @@ class Fuzzer:
         n_file_found = 0 
         depth = 0
         breadth = 0
-        list_of_fuzzed_tests = [(test, test.inputs, depth, breadth) for test in self.tests if test.has_valid_inputs()] # start the seed with the original tests
+        list_of_fuzzed_tests = [FuzzedTestTuple(test=test, mutated_inputs=test.inputs, depth=depth, breadth=breadth, stats=None) for test in self.tests if test.has_valid_inputs()] # start the seed with the original tests
         # list_of_fuzzed_tests = [(test, mutated_inputs, depth, breadth) for test, mutated_inputs, depth, breadth, _ in  self.find_best_inputs(list_of_fuzzed_tests, n_iteration=1)] # start the seed with the original tests
         
         interesting_tests: list[Stats] = []
@@ -40,36 +44,28 @@ class Fuzzer:
         try:
             while (n_iteration < 100 and n_file_found < self.n_threshold):
                     with mp.Pool(self.num_cores) as pool:
-                            fuzzed_tests = pool.imap_unordered(self.compiler.compile_test, [(test, self.apply(test, test.inputs), mutated_inputs, depth, breadth ) for test, mutated_inputs, depth, breadth in list_of_fuzzed_tests])
+                            fuzzed_tests = pool.imap_unordered(self.compiler.compile_test, [(test, self.apply(test, test.inputs), mutated_inputs, depth, breadth, old_stats) for test, mutated_inputs, depth, breadth, old_stats in list_of_fuzzed_tests])
                             n_iteration += 1
                             list_of_fuzzed_tests = []
                             for fuzzed_test in fuzzed_tests:
                                 tqdm.write(fuzzed_test.test.name)
+                                
                                 if fuzzed_test.stats.n_tests > 1 and fuzzed_test.stats.is_interesting():
 
-                                    if fuzzed_test.stats.max_rateo[0] > 1.50:
                                         tqdm.write(f"Checking {fuzzed_test.test.name}")
 
-                                        if fuzzed_test.is_asan_safe(self.compiler):
-                                            pbar.update()
-                                            n_file_found += 1
-                                            pbar.set_description(f"Found new mutation: {fuzzed_test.test.name}")
-                                            self.data_loader.save_results(fuzzed_test.stats)
-                                            interesting_tests.append(fuzzed_test.stats)
-                                            continue
-                                        else:
-                                            tqdm.write(f"Mutation for {fuzzed_test.test.name} is not ASAN safe")
-
-                                    list_of_fuzzed_tests.append((fuzzed_test.test, self.mutate_inputs(fuzzed_test,
+                                if fuzzed_test.has_improved():
+                                    list_of_fuzzed_tests.append(FuzzedTestTuple(fuzzed_test.test, self.mutate_inputs(fuzzed_test,
                                                                                                     fuzzed_test.depth + 1, 
-                                                                                                    fuzzed_test.breadth) , fuzzed_test.depth + 1, fuzzed_test.breadth))
-                                    
+                                                                                                    fuzzed_test.breadth) , fuzzed_test.depth + 1, fuzzed_test.breadth, fuzzed_test.stats))
                                 else:
-                                    list_of_fuzzed_tests.append((fuzzed_test.test, self.mutate_inputs(fuzzed_test, 
+                                    list_of_fuzzed_tests.append(FuzzedTestTuple(fuzzed_test.test, self.mutate_inputs(fuzzed_test, 
                                                                                                     fuzzed_test.depth, 
-                                                                                                    fuzzed_test.breadth + 1), fuzzed_test.depth, fuzzed_test.breadth + 1))
+                                                                                                    fuzzed_test.breadth + 1), fuzzed_test.depth, fuzzed_test.breadth + 1, fuzzed_test.stats))
         except KeyboardInterrupt:
              pass
+        except Exception as e:
+            traceback.print_exc()
         finally:     
             pbar.close()
             return interesting_tests
