@@ -33,7 +33,6 @@ class Compiler:
 
         result = subprocess.run(["./"+output_dir], stderr=subprocess.PIPE)
         if result.stderr:
-            print(result.stderr)
             return False
         
         os.remove(output_dir)
