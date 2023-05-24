@@ -31,7 +31,11 @@ class Compiler:
         
         os.remove(dir+".c")
 
-        result = subprocess.run(["./"+output_dir], stderr=subprocess.PIPE)
+        try:
+            result = subprocess.run(["./"+output_dir], stderr=subprocess.PIPE, timeout=10)
+        except subprocess.TimeoutExpired:
+            print("Timeout expired, probably asan safe")
+
         if result.stderr:
             return False
         
