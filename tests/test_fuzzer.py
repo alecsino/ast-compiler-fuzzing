@@ -9,7 +9,7 @@ def fuzzer():
     Returns:
         Fuzzer: the data loader
     """
-    return Fuzzer(tests=[], compiler=None, num_cores=0, n_threshold=0)
+    return Fuzzer(tests=[], compiler=None, num_cores=0, n_threshold=0, mutator=None)
 
 def test__mutate(fuzzer):
     """Test mutation.

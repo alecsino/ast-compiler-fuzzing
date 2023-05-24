@@ -7,11 +7,12 @@ from modules.test import Input, Test, Stats
 
 
 _PATTERN_EXEC = r"int\s+main\s*\("
-_PATTERN_CONSTANTS_LOCAL_DEF = r"^\s+(?P<type>int|float|double|char|long|short)(?P<seq>(?:\s+(?P<name>\w+)(?P<is_array>\[(?P<size>[0-9]*)\])?\s*(?:=\s*(?P<value>.*)\s*)?(?:,|;))+)"
-_PATTERN_CONSTANTS_LOCAL_ASS = r"^\s+(?P<seq>(?:\s+(?P<name>\w+)(?P<is_array>\[(?P<size>[0-9]*)\])?\s*(?:=\s*(?P<value>.*)\s*)(?:,|;))+)"
-_PATTERN_CONSTANTS_GLOBAL_DEF = r"^(:?\w+\b(?<!\btypedef)\s+)?(?P<type>int|float|double|char|long|short)(?P<seq>(?:\s+(?P<name>\w+)(?P<is_array>\[(?P<size>[0-9]*)\])?\s*(?:=\s*(?P<value>.*)\s*)?(?:,|;))+)"
-_PATTERN_CONSTANTS_GLOBAL_ASS = r"^(?P<seq>(?:\s+(?P<name>\w+)(?P<is_array>\[(?P<size>[0-9]*)\])?\s*(?:=\s*(?P<value>.*)\s*)?(?:,|;))+)"
-_PATTERN_CONSTANTS_GLOBAL_SEQ = r"(?P<initial_space>\s*)(?P<input>(?P<name>\w+)(?P<is_array>\[(?P<size>[0-9]*)\])?\s*(?:=\s*(?P<value>.*)\s*)?)(?P<has_next>,|;)(?P<final_space>\s*)"
+_VALUE_PATTERN  = r"(?P<value>(\".*\"|{.*}|[0-9]+.?[0-9]*))\s*)"
+_PATTERN_CONSTANTS_LOCAL_DEF = fr"^\s+(?P<type>int|float|double|char|long|short)(?P<seq>(?:\s+(?P<is_pointer>\*)?(?P<name>\w+)(?P<is_array>\[(?P<size>[0-9]*)\])?\s*(?:=\s*{_VALUE_PATTERN}?(?:,|;))+)"
+_PATTERN_CONSTANTS_LOCAL_ASS = rf"^\s+(?P<seq>(?:\s+(?P<is_pointer>\*)?(?P<name>\w+)(?P<is_array>\[(?P<size>[0-9]*)\])?\s*(?:=\s*{_VALUE_PATTERN}?(?:,|;))+)"
+_PATTERN_CONSTANTS_GLOBAL_DEF = rf"^(:?\w+\b(?<!\btypedef)\s+)?(?P<type>int|float|double|char|long|short)(?P<seq>(?:\s+(?P<is_pointer>\*)?(?P<name>\w+)(?P<is_array>\[(?P<size>[0-9]*)\])?\s*(?:=\s*{_VALUE_PATTERN}?(?:,|;))+)"
+_PATTERN_CONSTANTS_GLOBAL_ASS = rf"^(?P<seq>(?:\s+(?P<is_pointer>\*)?(?P<name>\w+)(?P<is_array>\[(?P<size>[0-9]*)\])?\s*(?:=\s*{_VALUE_PATTERN}?(?:,|;))+)"
+_PATTERN_CONSTANTS_GLOBAL_SEQ = rf"(?P<initial_space>\s*)(?P<input>(?P<is_pointer>\*)?(?P<name>\w+)(?P<is_array>\[(?P<size>[0-9]*)\])?\s*(?:=\s*{_VALUE_PATTERN}?)(?P<has_next>,|;)(?P<final_space>\s*)"
 _POSSIBLE_MATCHES = [(re.compile(pattern), is_global, is_declared)  for pattern, is_global, is_declared in ((_PATTERN_CONSTANTS_LOCAL_DEF, 1, 1), (_PATTERN_CONSTANTS_LOCAL_ASS, 1, 0), (_PATTERN_CONSTANTS_GLOBAL_DEF, 0, 1), (_PATTERN_CONSTANTS_GLOBAL_ASS, 0, 0))]
 _FILE_EXTENSION = '**/*.[c cpp]'
 
@@ -30,6 +31,7 @@ class DataLoader:
         Returns:
             list[Tests]: list of processed tests.
         """        
+        
         directory = self.args.data
         print(f"Analyzing tests in {directory}")
         test_directory = Path(directory)
@@ -72,9 +74,11 @@ class DataLoader:
         with file.open(encoding="ISO-8859-1", errors='ignore') as f:
             in_struct = False
             in_union = False
+            n_input = 0
             while original_line := f.readline():
                 match_line = None
                 
+                # ------------ skip structs and unions ------------ #
                 if  re.compile(r".*struct.*").match(original_line) :
                     in_struct = True
                 if  re.compile(r"^}.*").match(original_line) and in_struct:
@@ -89,8 +93,14 @@ class DataLoader:
                 for pattern, scope, is_declared  in _POSSIBLE_MATCHES:
                     if not in_struct and not in_union and (match_line  := pattern.match(original_line)) :
                         processed_line = original_line
-                        for i, match in enumerate(r_global_seq.finditer(match_line.group('seq')), start=len(inputs)):
-                            inputs[i] =  Input(
+                        
+                        for match in r_global_seq.finditer(match_line.group('seq')):
+                            
+                            # ----- skip pointers ----- #
+                            if match.group('is_pointer'):
+                                continue
+                            
+                            inputs[n_input] =  Input(
                                                 name=match.group('name'), 
                                                 type=(match_line.group('type') if not match.group('is_array')  else match_line.group('type')) if match_line.groupdict().get('type') else None, 
                                                 value=match.group('value') if match.group('value') else ("0" if not match.group('is_array')  else "{ 0 }"), 
@@ -98,8 +108,9 @@ class DataLoader:
                                                 scope=scope,
                                                 is_declared=is_declared
                                             ) 
-                            processed_line = re.sub(_PATTERN_CONSTANTS_GLOBAL_SEQ, rf"\g<initial_space>[INPUT_{i}]\g<has_next>\g<final_space>", processed_line, count=1)
-                        
+                            processed_line = re.sub(_PATTERN_CONSTANTS_GLOBAL_SEQ, rf"\g<initial_space>[INPUT_{n_input}]\g<has_next>\g<final_space>", processed_line, count=1)
+                            n_input += 1
+                            
                         processed_file += processed_line
                         break
                     

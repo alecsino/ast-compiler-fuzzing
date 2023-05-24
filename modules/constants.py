@@ -1,7 +1,7 @@
 import enum
 import string
 
-CHARACTERS  = string.ascii_letters + string.digits + string.punctuation
+CHARACTERS  = string.ascii_letters + string.digits + string.punctuation.replace("\"", "").replace("\'", "").replace("\\", "") 
 INT_MIN = -2147483648
 INT_MAX = 2147483647
 FLOAT_MIN = -1.17549e-038
