@@ -39,3 +39,7 @@ To run the tests, from the project directory run
 ```bash
    pytest .
 ```
+
+##  **Troubleshooting**
+
+Make sure your architecture supports the address sanatizer check with asan using the flag `-fsanatize=address`.
