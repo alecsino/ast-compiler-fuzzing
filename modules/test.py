@@ -1,4 +1,5 @@
 import dataclasses
+import platform
 from typing import Any
 import re
 
@@ -88,6 +89,9 @@ class Stats:
 
     max_rateo: tuple[float, str]
 
+    asan_tested: bool = False
+    """Whether the test has been tested with asan."""
+
     def __init__(self, file_path: str, file_name: str, file_content: str):
         """Initialize the stats.
 
@@ -169,7 +173,13 @@ class FuzzedTest:
     """The bredth of mutation."""
 
     def is_asan_safe(self, compiler) -> bool:
+        #if aarch64 always return true since asan is not supported
+        if platform.machine() == "aarch64":
+            self.stats.asan_tested = False
+            return True
+        
         return compiler.is_asan_safe(self.stats, "last") and compiler.is_asan_safe(self.stats, self.stats.max_rateo[1])
+        
     
 
     def has_improved(self):

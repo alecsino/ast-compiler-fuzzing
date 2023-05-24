@@ -14,11 +14,13 @@ class Compiler:
     def is_asan_safe(self, test: Stats, compiler: str):
         output_name = "tmp_asan_" + os.path.splitext(test.file_name)[0]
         dir = os.path.join(os.path.dirname(test.file_path), output_name)
-        output_dir = os.path.join(".tmp", output_name)
 
         while os.path.isfile(dir+".c"):
-            output_dir += "_"
-        
+            dir += "_"
+            output_name += "_"
+
+        output_dir = os.path.join(".tmp", output_name)
+
         with open(dir+".c", "w") as f:
             f.write(test.file_content)
 
@@ -27,7 +29,9 @@ class Compiler:
 
         result = subprocess.run([compiler, dir+".c", "-fsanitize=address", "-o", output_dir] + self.FLAGS, stderr=subprocess.PIPE)
         if result.stderr:
-            return False
+            # Could not compile with asan, probably a problem of the architecture
+            test.asan_tested = False
+            return True
         
         os.remove(dir+".c")
 
@@ -36,7 +40,10 @@ class Compiler:
         except subprocess.TimeoutExpired:
             print("Timeout expired, probably asan safe")
 
+        test.asan_tested = True
+
         if result.stderr:
+            print(result.stderr.decode("utf-8"))
             return False
         
         os.remove(output_dir)
@@ -59,11 +66,13 @@ class Compiler:
         output_name = "tmp_" + os.path.splitext(test.file_name)[0]
 
         dir = os.path.join(os.path.dirname(test.file_path), output_name)
-        output_dir = os.path.join(".tmp", output_name)
 
         while os.path.isfile(dir+".c"):
-            output_dir += "_"
-        
+            dir += "_"
+            output_name += "_"
+
+        output_dir = os.path.join(".tmp", output_name)
+
         with open(dir+".c", "w") as f:
             f.write(test.file_content)
 
