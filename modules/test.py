@@ -156,6 +156,9 @@ class FuzzedTest:
     old_stats: Stats | None
     """Stats of the fuzzed test. If None, the test has not been compiled yet."""
     
+    old_inputs: list[Input]
+    """The unmutated inputs of the test."""
+    
     mutated_inputs: list[Input]
     """The mutated inputs of the test."""
     

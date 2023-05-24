@@ -9,7 +9,7 @@ from tqdm import tqdm
 import multiprocessing as mp
 import traceback
 
-FuzzedTestTuple = NamedTuple("FuzzedTestTuple", [("test", Test), ("mutated_inputs", dict[int, Input]), ("depth", int), ("breadth", int), ("stats", Stats)])
+FuzzedTestTuple = NamedTuple("FuzzedTestTuple", [("test", Test), ("old_inputs", dict[int, Input]), ("mutated_inputs", dict[int, Input]), ("depth", int), ("breadth", int), ("stats", Stats)])
     
 class Fuzzer:
     """The fuzzer."""
@@ -33,7 +33,7 @@ class Fuzzer:
         n_file_found = 0 
         depth = 0
         breadth = 0
-        list_of_fuzzed_tests = [FuzzedTestTuple(test=test, mutated_inputs=test.inputs, depth=depth, breadth=breadth, stats=None) for test in self.tests if test.has_valid_inputs()] # start the seed with the original tests
+        list_of_fuzzed_tests = [FuzzedTestTuple(test=test, old_inputs=None, mutated_inputs=test.inputs, depth=depth, breadth=breadth, stats=None) for test in self.tests if test.has_valid_inputs()] # start the seed with the original tests
         # list_of_fuzzed_tests = [(test, mutated_inputs, depth, breadth) for test, mutated_inputs, depth, breadth, _ in  self.find_best_inputs(list_of_fuzzed_tests, n_iteration=1)] # start the seed with the original tests
         
         interesting_tests: list[Stats] = []
@@ -44,7 +44,8 @@ class Fuzzer:
         try:
             while n_file_found < self.n_threshold:
                     with mp.Pool(self.num_cores) as pool:
-                            fuzzed_tests = pool.imap_unordered(self.compiler.compile_test, [(test, self.apply(test, test.inputs), mutated_inputs, depth, breadth, old_stats) for test, mutated_inputs, depth, breadth, old_stats in list_of_fuzzed_tests])
+                            fuzzed_tests = pool.imap_unordered(self.compiler.compile_test, [(test, self.apply(test, test.inputs), old_inputs, mutated_inputs, depth, breadth, old_stats) for test, old_inputs, mutated_inputs, depth, breadth, old_stats in list_of_fuzzed_tests])
+                            
                             n_iteration += 1
                             list_of_fuzzed_tests = []
                             for fuzzed_test in fuzzed_tests:
@@ -64,11 +65,12 @@ class Fuzzer:
                                             tqdm.write(f"Mutation for {fuzzed_test.test.name} is not ASAN safe")
 
                                 if fuzzed_test.has_improved():
-                                    list_of_fuzzed_tests.append(FuzzedTestTuple(fuzzed_test.test, self.mutate_inputs(fuzzed_test,
+                                    list_of_fuzzed_tests.append(FuzzedTestTuple(fuzzed_test.test, fuzzed_test.mutated_inputs, 
+                                                                                self.mutate_inputs(fuzzed_test,
                                                                                                     fuzzed_test.depth + 1, 
-                                                                                                    fuzzed_test.breadth) , fuzzed_test.depth + 1, fuzzed_test.breadth, fuzzed_test.stats))
+                                                                                                    fuzzed_test.breadth + 1) ,  fuzzed_test.depth + 1, fuzzed_test.breadth  + 1, fuzzed_test.stats))
                                 else:
-                                    list_of_fuzzed_tests.append(FuzzedTestTuple(fuzzed_test.test, self.mutate_inputs(fuzzed_test, 
+                                    list_of_fuzzed_tests.append(FuzzedTestTuple(fuzzed_test.test,  fuzzed_test.mutated_inputs, self.mutate_inputs(fuzzed_test, 
                                                                                                     fuzzed_test.depth, 
                                                                                                     fuzzed_test.breadth + 1), fuzzed_test.depth, fuzzed_test.breadth + 1, fuzzed_test.stats))
         except KeyboardInterrupt:
@@ -128,15 +130,17 @@ class Fuzzer:
         """
         
         left_most = len(test.mutated_inputs) - 1 
-        new_inputs = test.mutated_inputs.copy()
         
         if depth is None or breadth is None: # mutate all the inputs
+            new_inputs = test.mutated_inputs.copy()
             for i in range(len(test.mutated_inputs)):
                 new_inputs[i].value = self.mutator.mutate(test.mutated_inputs[i])
         elif depth != test.depth: # mutate vertically
-             new_inputs[left_most].value = self.mutator.mutate(test.mutated_inputs[left_most])
+            new_inputs = test.mutated_inputs.copy() # progress with the mutated inputs of the previous iteration
+            new_inputs[(left_most - breadth + len(test.mutated_inputs)) % len(test.mutated_inputs)].value =  self.mutator.mutate(test.mutated_inputs[(left_most - breadth + len(test.mutated_inputs))% len(test.mutated_inputs)])
         else: # mutate horizontally
-             new_inputs[(left_most - breadth + len(test.mutated_inputs)) % len(test.mutated_inputs)].value = self.mutator.mutate(test.mutated_inputs[(left_most - breadth + len(test.mutated_inputs))% len(test.mutated_inputs)])
+            new_inputs = test.old_inputs.copy() # backtrack and progress with the previous inputs
+            new_inputs[(left_most - breadth + len(test.mutated_inputs)) % len(test.mutated_inputs)].value = self.mutator.mutate(test.mutated_inputs[(left_most - breadth + len(test.mutated_inputs))% len(test.mutated_inputs)])
         
         return new_inputs
     

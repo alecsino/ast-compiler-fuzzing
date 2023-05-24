@@ -31,6 +31,7 @@ class DataLoader:
         Returns:
             list[Tests]: list of processed tests.
         """        
+        
         directory = self.args.data
         print(f"Analyzing tests in {directory}")
         test_directory = Path(directory)
@@ -73,10 +74,11 @@ class DataLoader:
         with file.open(encoding="ISO-8859-1", errors='ignore') as f:
             in_struct = False
             in_union = False
-            i = 0
+            n_input = 0
             while original_line := f.readline():
                 match_line = None
                 
+                # ------------ skip structs and unions ------------ #
                 if  re.compile(r".*struct.*").match(original_line) :
                     in_struct = True
                 if  re.compile(r"^}.*").match(original_line) and in_struct:
@@ -93,9 +95,12 @@ class DataLoader:
                         processed_line = original_line
                         
                         for match in r_global_seq.finditer(match_line.group('seq')):
+                            
+                            # ----- skip pointers ----- #
                             if match.group('is_pointer'):
                                 continue
-                            inputs[i] =  Input(
+                            
+                            inputs[n_input] =  Input(
                                                 name=match.group('name'), 
                                                 type=(match_line.group('type') if not match.group('is_array')  else match_line.group('type')) if match_line.groupdict().get('type') else None, 
                                                 value=match.group('value') if match.group('value') else ("0" if not match.group('is_array')  else "{ 0 }"), 
@@ -103,8 +108,8 @@ class DataLoader:
                                                 scope=scope,
                                                 is_declared=is_declared
                                             ) 
-                            processed_line = re.sub(_PATTERN_CONSTANTS_GLOBAL_SEQ, rf"\g<initial_space>[INPUT_{i}]\g<has_next>\g<final_space>", processed_line, count=1)
-                            i += 1
+                            processed_line = re.sub(_PATTERN_CONSTANTS_GLOBAL_SEQ, rf"\g<initial_space>[INPUT_{n_input}]\g<has_next>\g<final_space>", processed_line, count=1)
+                            n_input += 1
                             
                         processed_file += processed_line
                         break

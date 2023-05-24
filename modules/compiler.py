@@ -104,7 +104,7 @@ class Compiler:
             FuzzedTest -- The fuzzed test
         """
         
-        test, f_content, new_inputs, depth, breadth, old_stats = tuple
+        test, f_content, old_inputs, new_inputs, depth, breadth, old_stats = tuple
         if not os.path.isfile(test.name):
             raise FileNotFoundError("File " + test + " does not exist")
         
@@ -119,4 +119,4 @@ class Compiler:
             
             stats.add_compiler_stat(i, n)
 
-        return FuzzedTest(test=test, stats=stats, old_stats=old_stats, mutated_inputs=new_inputs, depth=depth, breadth=breadth)
+        return FuzzedTest(test=test, stats=stats, old_stats=old_stats, old_inputs=old_inputs, mutated_inputs=new_inputs, depth=depth, breadth=breadth)
