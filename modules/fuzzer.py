@@ -42,7 +42,7 @@ class Fuzzer:
 
         pbar = tqdm(total=self.n_threshold)
         try:
-            while (n_iteration < 100 and n_file_found < self.n_threshold):
+            while n_file_found < self.n_threshold:
                     with mp.Pool(self.num_cores) as pool:
                             fuzzed_tests = pool.imap_unordered(self.compiler.compile_test, [(test, self.apply(test, test.inputs), mutated_inputs, depth, breadth, old_stats) for test, mutated_inputs, depth, breadth, old_stats in list_of_fuzzed_tests])
                             n_iteration += 1
@@ -53,6 +53,15 @@ class Fuzzer:
                                 if fuzzed_test.stats.n_tests > 1 and fuzzed_test.stats.is_interesting():
 
                                         tqdm.write(f"Checking {fuzzed_test.test.name}")
+                                        if fuzzed_test.is_asan_safe(self.compiler):
+                                            pbar.update()
+                                            n_file_found += 1
+                                            pbar.set_description(f"Found new mutation: {fuzzed_test.test.name}")
+                                            self.data_loader.save_results(fuzzed_test.stats)
+                                            interesting_tests.append(fuzzed_test.stats)
+                                            continue
+                                        else:
+                                            tqdm.write(f"Mutation for {fuzzed_test.test.name} is not ASAN safe")
 
                                 if fuzzed_test.has_improved():
                                     list_of_fuzzed_tests.append(FuzzedTestTuple(fuzzed_test.test, self.mutate_inputs(fuzzed_test,

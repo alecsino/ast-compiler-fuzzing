@@ -27,13 +27,11 @@ class Compiler:
 
         result = subprocess.run([compiler, dir+".c", "-fsanitize=address", "-o", output_dir] + self.FLAGS, stderr=subprocess.PIPE)
         if result.stderr:
-            print(result.stderr)
             return False
         
         os.remove(dir+".c")
 
         result = subprocess.run(["./"+output_dir], stderr=subprocess.PIPE)
-        print(result)
         if result.stderr:
             print(result.stderr)
             return False
