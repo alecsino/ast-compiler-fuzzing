@@ -137,7 +137,7 @@ class Stats:
                 self.max_rateo = (round(self.compiler_stats["last"] / min_v, 2), key)
                 break
         
-        if self.max_rateo[0] > 1.00:
+        if self.max_rateo[0] > 1.50:
             return True
         
         return False
@@ -153,6 +153,12 @@ class FuzzedTest:
     stats: Stats | None
     """Stats of the fuzzed test. If None, the test has not been compiled yet."""
     
+    old_stats: Stats | None
+    """Stats of the fuzzed test. If None, the test has not been compiled yet."""
+    
+    old_inputs: list[Input]
+    """The unmutated inputs of the test."""
+    
     mutated_inputs: list[Input]
     """The mutated inputs of the test."""
     
@@ -165,3 +171,15 @@ class FuzzedTest:
     def is_asan_safe(self, compiler) -> bool:
         return compiler.is_asan_safe(self.stats, "last") and compiler.is_asan_safe(self.stats, self.stats.max_rateo[1])
     
+
+    def has_improved(self):
+        """Whether the fuzzed test is improved with respect to the previous mutation.
+
+        Returns:
+            bool: whether the test has improved
+        """
+        
+        if self.old_stats is None:
+            return True
+        
+        return self.stats.max_rateo[0] > self.old_stats.max_rateo[0]

@@ -22,17 +22,17 @@ class Modification:
         """
         match input.type:
             case constants.Type.INT:
-                return self._generate_numb(input.value, constants.Short, int, random.randint) if input.len is None else "{" + ", ".join([self._generate_numb(i, constants.Short, int, random.randint) for i in input.value.replace("{", "").replace("}", "").split(", ")]) + "}"
+                return self._generate_numb(input.value, constants.Short, int, random.randint) if input.len is None or not input.is_declared else "{" + ", ".join([self._generate_numb(i, constants.Short, int, random.randint) for i in input.value.replace("{", "").replace("}", "").split(", ")]) + "}"
             case constants.Type.SHORT:
-                return self._generate_numb(input.value, constants.Short, int, random.randint) if input.len is None else "{" + ", ".join([self._generate_numb(i, constants.Short, int, random.randint) for i in input.value.replace("{", "").replace("}", "").split(", ")]) + "}"
+                return self._generate_numb(input.value, constants.Short, int, random.randint) if input.len is None  or not input.is_declared else "{" + ", ".join([self._generate_numb(i, constants.Short, int, random.randint) for i in input.value.replace("{", "").replace("}", "").split(", ")]) + "}"
             case constants.Type.LONG:
-                return self._generate_numb(input.value, constants.Int, int, random.randint) if input.len is None else "{" + ", ".join([self._generate_numb(i, constants.Int, int, random.randint) for i in input.value.replace("{", "").replace("}", "").split(", ")]) + "}"
+                return self._generate_numb(input.value, constants.Int, int, random.randint) if input.len is None  or not input.is_declared else "{" + ", ".join([self._generate_numb(i, constants.Int, int, random.randint) for i in input.value.replace("{", "").replace("}", "").split(", ")]) + "}"
             case constants.Type.FLOAT:
-                return self._generate_numb(input.value, constants.Float, float, random.uniform) if input.len is None else "{" + ", ".join([self._generate_numb(i, constants.Float, float, random.uniform) for i in input.value.replace("{", "").replace("}", "").split(", ")]) + "}"
+                return self._generate_numb(input.value, constants.Float, float, random.uniform) if input.len is None  or not input.is_declared else "{" + ", ".join([self._generate_numb(i, constants.Float, float, random.uniform) for i in input.value.replace("{", "").replace("}", "").split(", ")]) + "}"
             case constants.Type.DOUBLE:
-                return self._generate_numb(input.value, constants.Double, float, random.uniform) if input.len is None else "{" + ", ".join([self._generate_numb(i, constants.Double, float, random.uniform) for i in input.value.split(", ")]) + "}"
+                return self._generate_numb(input.value, constants.Double, float, random.uniform) if input.len is None  or not input.is_declared else "{" + ", ".join([self._generate_numb(i, constants.Double, float, random.uniform) for i in input.value.split(", ")]) + "}"
             case constants.Type.CHAR:
-                return "\'" + random.choice(constants.CHARACTERS) + "\'" if input.len is None else "\"" + self._generate_string(input.value, input.len) + "\""
+                return "\'" + random.choice(constants.CHARACTERS) + "\'" if input.len is None  or not input.is_declared else "\"" + self._generate_string(input.value, input.len) + "\""
             case _:
                  raise ValueError(f"Type {input.type} not supported")
              
@@ -79,12 +79,13 @@ class Modification:
         Returns:
             str: the new value
         """        
+        value = value[1:-2] # remove quotes
         character = random.choice(constants.CHARACTERS) 
         if len(value + character) > max_len:
-            index = random.randint(0, max_len-1)
+            index = random.randint(0, max_len-2)
             value = value[:index] + character + value[index + 1:]
         else:
             value += character
-        return value
+        return value + "\\0"
              
         
