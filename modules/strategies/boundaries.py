@@ -31,6 +31,6 @@ class Boundaries:
             case constants.Type.DOUBLE:
                 return str(random.choice([constants.DOUBLE_MAX, constants.DOUBLE_MIN, -1.1514, 0, 1.1515]))  if input.len is None or not input.is_declared  else "{" +  ", ".join([str(random.choice([constants.DOUBLE_MAX, constants.DOUBLE_MIN, -1.15, 0, 1.15])) for i in range(input.len)]) + "}"
             case constants.Type.CHAR:
-                return "\'" + random.choice(["\0"]) + "\'" if input.len is None or not input.is_declared else "\"" + (random.choice(["\0"]) * input.len) + "\""
+                return "\'" + random.choice(["\\0"]) + "\'" if input.len is None or not input.is_declared else "\"" + (random.choice(["\\0"]) * input.len) + "\""
             case _:
                  raise ValueError(f"Type {input.type} not supported")

@@ -20,7 +20,6 @@ class Random:
         """
         
         match input.type:
-            
             case constants.Type.INT:
                     return  str(random.randint(constants.INT_MIN, constants.INT_MAX)) if input.len is None or not input.is_declared else "{" + ", ".join([str(random.randint(constants.INT_MIN, constants.INT_MAX)) for i in range(input.len)]) + "}"     
             case constants.Type.SHORT:
@@ -32,6 +31,6 @@ class Random:
             case constants.Type.DOUBLE:
                 return str(random.uniform(constants.DOUBLE_MIN, constants.DOUBLE_MAX)) if input.len is None or not input.is_declared else "{" +", ".join([str(random.uniform(constants.DOUBLE_MIN, constants.DOUBLE_MAX)) for i in range(input.len)]) + "}"
             case constants.Type.CHAR:
-                return "\'" + random.choice(constants.CHARACTERS) + "\'" if input.len is None or not input.is_declared  else "\"" + (random.choice (constants.CHARACTERS) * input.len) + "\""
+                return "\'" + random.choice(constants.CHARACTERS) + "\'" if input.len is None or not input.is_declared  else "\"" + "".join([random.choice (constants.CHARACTERS) for i in range(input.len-1)]) + "\\0\""
             case _:
                  raise ValueError(f"Type {input.type} not supported")

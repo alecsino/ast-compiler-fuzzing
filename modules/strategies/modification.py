@@ -79,13 +79,13 @@ class Modification:
         Returns:
             str: the new value
         """        
-        value = value[1:-1] # remove quotes
+        value = value[1:-2] # remove quotes
         character = random.choice(constants.CHARACTERS) 
         if len(value + character) > max_len:
-            index = random.randint(0, max_len-1)
+            index = random.randint(0, max_len-2)
             value = value[:index] + character + value[index + 1:]
         else:
             value += character
-        return value
+        return value + "\\0"
              
         
