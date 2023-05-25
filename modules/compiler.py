@@ -45,6 +45,7 @@ class Compiler:
 
         if result.stderr:
             # print(result.stderr.decode("utf-8"))
+            os.remove(output_dir)
             return False
         
         os.remove(output_dir)
