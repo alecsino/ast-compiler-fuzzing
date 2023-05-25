@@ -36,14 +36,15 @@ class Compiler:
         os.remove(dir+".c")
 
         try:
-            result = subprocess.run(["./"+output_dir], stderr=subprocess.PIPE, timeout=10)
+            result = subprocess.run(["./"+output_dir], stderr=subprocess.PIPE, timeout=5)
         except subprocess.TimeoutExpired:
-            print("Timeout expired, probably asan safe")
+            # print("Timeout expired, probably asan safe")
+            pass
 
         test.asan_tested = True
 
         if result.stderr:
-            print(result.stderr.decode("utf-8"))
+            # print(result.stderr.decode("utf-8"))
             return False
         
         os.remove(output_dir)
