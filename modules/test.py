@@ -25,6 +25,8 @@ class Input:
     
     len : int = None
     """Length of the variable, if array or string and available, else None."""
+
+    interesting: bool = True
     
     
     def __post_init__(self):
@@ -41,8 +43,9 @@ class Input:
             return len(is_array.group('content').split(","))
         if is_string := re.match(r"\"(?P<content>.*)\"", self.value):
             return len(is_string.group('content')) + 1
+        
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class Test:
     """Test object."""
     
@@ -120,7 +123,7 @@ class Stats:
         """Returns the number of tests."""
         return len(self.compiler_stats)
 
-    def is_interesting(self):
+    def set_max(self):
         """Whether the ratio with respect to an older version is greater than 1.
 
         Args:
@@ -131,7 +134,13 @@ class Stats:
         """
 
         if "last" not in self.compiler_stats:
-            return False
+            self.max_rateo = (0, "")
+            return
+        
+        if len(self.compiler_stats) <= 1:
+            self.max_rateo = (0, "")
+            return
+        
         
         min_v = min([value for key, value in self.compiler_stats.items() if not key.startswith("last")])
         
@@ -140,12 +149,11 @@ class Stats:
             if value == min_v:
                 self.max_rateo = (round(self.compiler_stats["last"] / min_v, 2), key)
                 break
-        
-        if self.max_rateo[0] > 1.50:
-            return True
-        
-        return False
     
+    def is_interesting(self):
+        """Whether the ratio with respect to an older version is greater than the interesting threshold."""
+        
+        return True if self.max_rateo[0] > 1.50 else False
 
 @dataclasses.dataclass
 class FuzzedTest:
@@ -157,39 +165,26 @@ class FuzzedTest:
     stats: Stats | None
     """Stats of the fuzzed test. If None, the test has not been compiled yet."""
     
-    old_stats: Stats | None
-    """Stats of the fuzzed test. If None, the test has not been compiled yet."""
-    
-    old_inputs: list[Input]
-    """The unmutated inputs of the test."""
-    
-    mutated_inputs: list[Input]
+    mutated_inputs: dict[int, Input]
     """The mutated inputs of the test."""
     
-    depth: int
-    """The depth of mutation."""
-    
-    breadth: int
-    """The bredth of mutation."""
-
     def is_asan_safe(self, compiler) -> bool:
         #if aarch64 always return true since asan is not supported
-        if platform.machine() == "aarch64":
+        if platform.machine() == "aarch64" or platform.machine() == "arm64":
             self.stats.asan_tested = False
             return True
         
         return compiler.is_asan_safe(self.stats, "last") and compiler.is_asan_safe(self.stats, self.stats.max_rateo[1])
         
-    
 
-    def has_improved(self):
+    def has_improved(self, old_stats: Stats) -> bool:
         """Whether the fuzzed test is improved with respect to the previous mutation.
 
         Returns:
             bool: whether the test has improved
         """
         
-        if self.old_stats is None:
+        if old_stats is None:
             return True
         
-        return self.stats.max_rateo[0] > self.old_stats.max_rateo[0]
+        return self.stats.max_rateo[0] >= old_stats.max_rateo[0]

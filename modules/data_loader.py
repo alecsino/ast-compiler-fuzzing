@@ -51,6 +51,10 @@ class DataLoader:
         
         with file.open(encoding="ISO-8859-1", errors='ignore') as f:
             file_contents = f.read()
+
+        if len(file_contents.splitlines()) > 200:
+            return False
+
         match = re.search(_PATTERN_EXEC, file_contents)
         return True if match else False
     

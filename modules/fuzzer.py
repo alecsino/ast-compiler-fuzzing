@@ -1,15 +1,12 @@
-from collections import defaultdict
-import random
 from typing import NamedTuple
 from modules.compiler import Compiler, Stats
 from modules.strategies.mutator import Mutator
 from modules.test import FuzzedTest, Input, Test
-from modules import constants
 from tqdm import tqdm
 import multiprocessing as mp
+import copy
 import traceback
 
-FuzzedTestTuple = NamedTuple("FuzzedTestTuple", [("test", Test), ("old_inputs", dict[int, Input]), ("mutated_inputs", dict[int, Input]), ("depth", int), ("breadth", int), ("stats", Stats)])
     
 class Fuzzer:
     """The fuzzer."""
@@ -31,48 +28,37 @@ class Fuzzer:
         """  
               
         n_file_found = 0 
-        depth = 0
-        breadth = 0
-        list_of_fuzzed_tests = [FuzzedTestTuple(test=test, old_inputs=None, mutated_inputs=test.inputs, depth=depth, breadth=breadth, stats=None) for test in self.tests if test.has_valid_inputs()] # start the seed with the original tests
-        # list_of_fuzzed_tests = [(test, mutated_inputs, depth, breadth) for test, mutated_inputs, depth, breadth, _ in  self.find_best_inputs(list_of_fuzzed_tests, n_iteration=1)] # start the seed with the original tests
-        
+        list_of_fuzzed_tests = [FuzzedTest(test=test, mutated_inputs={i: copy.deepcopy(input) for i, input in test.inputs.items()}, stats=None) for test in self.tests if test.has_valid_inputs()]
+
+        best_mutations: FuzzedTest = []
         interesting_tests: list[Stats] = []
-        n_iteration = 0
         print(f"Start fuzzing {len(list_of_fuzzed_tests)} tests with {self.num_cores} cores. Threshold: {self.n_threshold}")
 
         pbar = tqdm(total=self.n_threshold)
+        n_file_found = 0
         try:
-            while n_file_found < self.n_threshold:
+            while True:
                     with mp.Pool(self.num_cores) as pool:
-                            fuzzed_tests = pool.imap_unordered(self.compiler.compile_test, [(test, self.apply(test, test.inputs), old_inputs, mutated_inputs, depth, breadth, old_stats) for test, old_inputs, mutated_inputs, depth, breadth, old_stats in list_of_fuzzed_tests])
+                            best_mutations = pool.imap_unordered(self._single_mutation, list_of_fuzzed_tests)
+                            inner_bar = tqdm(total=len(list_of_fuzzed_tests), leave=False, desc="Mutating tests")
+                            for test in best_mutations:
+                                inner_bar.update()
+                                if test is not None:
+                                    pbar.update()
+                                    n_file_found += 1
+                                    pbar.set_description(f"Found new mutation: {test.test.name} with {test.stats.max_rateo[0]}")
+                                    self.data_loader.save_results(test.stats)
+                                    interesting_tests.append(test.stats)
+
+                                    if n_file_found >= self.n_threshold:
+                                        pbar.close()
+                                        inner_bar.close()
+                                        return interesting_tests
+
                             
-                            n_iteration += 1
-                            list_of_fuzzed_tests = []
-                            for fuzzed_test in fuzzed_tests:
-                                tqdm.write(fuzzed_test.test.name)
-                                
-                                if fuzzed_test.stats.n_tests > 1 and fuzzed_test.stats.is_interesting():
-
-                                        tqdm.write(f"Checking {fuzzed_test.test.name}")
-                                        if fuzzed_test.is_asan_safe(self.compiler):
-                                            pbar.update()
-                                            n_file_found += 1
-                                            pbar.set_description(f"Found new mutation: {fuzzed_test.test.name}")
-                                            self.data_loader.save_results(fuzzed_test.stats)
-                                            interesting_tests.append(fuzzed_test.stats)
-                                            continue
-                                        else:
-                                            tqdm.write(f"Mutation for {fuzzed_test.test.name} is not ASAN safe")
-
-                                if fuzzed_test.has_improved():
-                                    list_of_fuzzed_tests.append(FuzzedTestTuple(fuzzed_test.test, fuzzed_test.mutated_inputs, 
-                                                                                self.mutate_inputs(fuzzed_test,
-                                                                                                    fuzzed_test.depth + 1, 
-                                                                                                    fuzzed_test.breadth + 1) ,  fuzzed_test.depth + 1, fuzzed_test.breadth  + 1, fuzzed_test.stats))
-                                else:
-                                    list_of_fuzzed_tests.append(FuzzedTestTuple(fuzzed_test.test,  fuzzed_test.mutated_inputs, self.mutate_inputs(fuzzed_test, 
-                                                                                                    fuzzed_test.depth, 
-                                                                                                    fuzzed_test.breadth + 1), fuzzed_test.depth, fuzzed_test.breadth + 1, fuzzed_test.stats))
+                            list_of_fuzzed_tests = [ test for test in list_of_fuzzed_tests if test.stats.file_path  not in [stat.file_path for stat in interesting_tests]]
+                            inner_bar.close()
+                            
         except KeyboardInterrupt:
              pass
         except Exception as e:
@@ -80,21 +66,80 @@ class Fuzzer:
         finally:     
             pbar.close()
             return interesting_tests
-                            
-    def find_best_inputs(self, list_of_fuzzed_tests: list, n_iteration: int = 100) -> list[Input]:
-        
-        print("Mutating the inputs of the tests to find the best inputs")
-        
-        tests = defaultdict(list)
-        for i in range(n_iteration):
-                with mp.Pool(self.num_cores) as pool:
-                    with tqdm(total=len(list_of_fuzzed_tests)) as pbar:
-                            for fuzzed_test in pool.imap_unordered(self.compiler.compile_test, [(test, self.apply(test, test.inputs), mutated_inputs, depth, breadth ) for test, mutated_inputs, depth, breadth in list_of_fuzzed_tests]):
-                                tests[fuzzed_test.test.name].append((fuzzed_test.test, self.mutate_inputs(fuzzed_test) , fuzzed_test.depth, fuzzed_test.breadth, fuzzed_test.stats))
-                                pbar.update()
-                    pbar.close()
-        return [max(tests[test], key=lambda x: x[4].max_rateo[0]) for test in tests]
     
+    def _single_mutation(self, fuzzed_test: FuzzedTest):
+        """
+        Perform a single round of mutation on a file.
+        """
+        
+        # check without mutation if the test is interesting
+        no_mut = self.compiler.compile_test((fuzzed_test.test, self.apply(fuzzed_test.test, fuzzed_test.test.inputs), fuzzed_test.mutated_inputs))
+        if no_mut.stats.is_interesting() and no_mut.is_asan_safe(self.compiler):
+            return no_mut
+
+        fuzzed = self._find_best_mutations(fuzzed_test, n_iterations=10)
+        if fuzzed is None:
+            return None
+        
+        # reduction
+        fuzzed = self._reduce_test(fuzzed)
+        
+        if fuzzed.stats.is_interesting():
+            return fuzzed
+        
+        for i in fuzzed.mutated_inputs:
+            if fuzzed.mutated_inputs[i].interesting:
+                for strategy in self.mutator.strategies:
+                    for n in range(self.mutator.STRATEGY_TRIES[strategy]):
+                
+                        fuzzed.mutated_inputs[i].value = self._mutate_input(fuzzed.mutated_inputs[i])
+                        fuzzed = self.compiler.compile_test((fuzzed.test, self.apply(fuzzed.test, fuzzed.mutated_inputs), fuzzed.mutated_inputs))
+                                        
+                        if fuzzed.stats.is_interesting() and fuzzed.is_asan_safe(compiler=self.compiler):
+                            return fuzzed
+        return None
+    
+    def _reduce_test(self, fuzzed_test: FuzzedTest) -> FuzzedTest:
+        """
+        Reduce the test by removing the inputs that do not affect the result.
+        """
+        for i in fuzzed_test.mutated_inputs:
+            
+            new_inputs = copy.deepcopy(fuzzed_test.mutated_inputs)
+            new_inputs[i].value = fuzzed_test.test.inputs[i].value
+            new_fuzzed = self.compiler.compile_test((fuzzed_test.test, self.apply(fuzzed_test.test, new_inputs), new_inputs))
+            if new_fuzzed.has_improved(fuzzed_test.stats):
+                 fuzzed_test.mutated_inputs[i].interesting = False
+
+        return fuzzed_test
+
+    def _find_best_mutations(self, fuzzed_test: FuzzedTest, n_iterations = 100) ->  FuzzedTest:
+        """
+        Mutate a test n_iterations times and return the best mutation.
+        """
+        
+        mutations = []
+        for i in range(n_iterations):
+
+            mutated_inputs = self.mutate_inputs(fuzzed_test)
+            fuzzed_test = self.compiler.compile_test((fuzzed_test.test, self.apply(fuzzed_test.test, mutated_inputs), mutated_inputs))
+            mutations.append(fuzzed_test)
+            
+        best_mutants = sorted(mutations, key=lambda x: x.stats.max_rateo[0])
+        
+        try_asan = 0
+        while try_asan < 5:
+            try_asan += 1
+            best_mutant = best_mutants.pop()
+            
+            if best_mutant.stats.max_rateo[0] == 0:
+                return None
+
+            if best_mutant.is_asan_safe(self.compiler):
+                return best_mutant
+
+        return None
+        
     def apply(self, test: Test, inputs: dict[int, Input]) -> str:
         """
         Apply to the test the inputs.
@@ -115,32 +160,22 @@ class Fuzzer:
     
         return file_content
 
-    def mutate_inputs(self, test: FuzzedTest, depth: int | None= None, breadth: int | None= None) -> dict[int, Input]:
+    def mutate_inputs(self, test: FuzzedTest) -> dict[int, Input]:
         """
         Mutate the test inputs.
-        NOTE: the mutation is either done vertically or horizontally.
         
         Args:
             test (Test): the original test
-            depth (int): the depth of the mutation. If None, mutate all the inputs
-            breadth (int): the breadth of the mutation. If None, mutate all the inputs
             
         Returns:
-            list[Input]: the mutated inputs
+            dict[Input]: the mutated inputs
         """
         
-        left_most = len(test.mutated_inputs) - 1 
-        
-        if depth is None or breadth is None: # mutate all the inputs
-            new_inputs = test.mutated_inputs.copy()
-            for i in range(len(test.mutated_inputs)):
-                new_inputs[i].value = self.mutator.mutate(test.mutated_inputs[i])
-        elif depth != test.depth: # mutate vertically
-            new_inputs = test.mutated_inputs.copy() # progress with the mutated inputs of the previous iteration
-            new_inputs[(left_most - breadth + len(test.mutated_inputs)) % len(test.mutated_inputs)].value =  self.mutator.mutate(test.mutated_inputs[(left_most - breadth + len(test.mutated_inputs))% len(test.mutated_inputs)])
-        else: # mutate horizontally
-            new_inputs = test.old_inputs.copy() # backtrack and progress with the previous inputs
-            new_inputs[(left_most - breadth + len(test.mutated_inputs)) % len(test.mutated_inputs)].value = self.mutator.mutate(test.mutated_inputs[(left_most - breadth + len(test.mutated_inputs))% len(test.mutated_inputs)])
-        
+        new_inputs = test.mutated_inputs.copy()
+        for i in range(len(test.mutated_inputs)):
+                new_inputs[i].value = self._mutate_input(test.mutated_inputs[i])
         return new_inputs
     
+    def _mutate_input(self, input: Input, strategy: str = "Random"):
+        return self.mutator.mutate(input, strategy)
+        

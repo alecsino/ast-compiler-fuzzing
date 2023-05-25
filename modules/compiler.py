@@ -11,7 +11,7 @@ class Compiler:
         self.args = args
         pass
 
-    def is_asan_safe(self, test: Stats, compiler: str):
+    def is_asan_safe(self, test: Stats, compiler: str) -> bool:
         output_name = "tmp_asan_" + os.path.splitext(test.file_name)[0]
         dir = os.path.join(os.path.dirname(test.file_path), output_name)
 
@@ -51,7 +51,7 @@ class Compiler:
         return True
 
     
-    def __compile_with(self, test, compiler: str):
+    def __compile_with(self, test, compiler: str) -> int:
         """
         Compiles a test with the specified version of the compiler into assembly
         
@@ -103,7 +103,7 @@ class Compiler:
         return num_lines
         
 
-    def compile_test(self, tuple):
+    def compile_test(self, tuple) -> FuzzedTest:
         """Compiles a test with the current compiler and with the previous
         
         Arguments:
@@ -116,7 +116,7 @@ class Compiler:
             FuzzedTest -- The fuzzed test
         """
         
-        test, f_content, old_inputs, new_inputs, depth, breadth, old_stats = tuple
+        test, f_content, new_inputs  = tuple
         if not os.path.isfile(test.name):
             raise FileNotFoundError("File " + test + " does not exist")
         
@@ -130,5 +130,7 @@ class Compiler:
                 continue
             
             stats.add_compiler_stat(i, n)
+        
+        stats.set_max() # Used to set the max_rateo variable
 
-        return FuzzedTest(test=test, stats=stats, old_stats=old_stats, old_inputs=old_inputs, mutated_inputs=new_inputs, depth=depth, breadth=breadth)
+        return FuzzedTest(test=test, stats=stats, mutated_inputs=new_inputs)
