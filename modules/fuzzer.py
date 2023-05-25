@@ -96,6 +96,7 @@ class Fuzzer:
                         fuzzed = self.compiler.compile_test((fuzzed.test, self.apply(fuzzed.test, fuzzed.mutated_inputs), fuzzed.mutated_inputs))
                                         
                         if fuzzed.stats.is_interesting() and fuzzed.is_asan_safe(compiler=self.compiler):
+                            fuzzed.stats.strategy_mutation = strategy
                             return fuzzed
         return None
     

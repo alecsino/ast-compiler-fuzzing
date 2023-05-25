@@ -134,7 +134,7 @@ class DataLoader:
         while os.path.isfile(output_dir):
             output_dir += "_"
         
-        csv_line = f"{s.file_name},{self.args.compiler},{s.max_rateo[1]},{s.compiler_stats['last']},{s.compiler_stats[s.max_rateo[1]]},{s.max_rateo[0]},{'ASAN tested' if s.asan_tested else 'ASAN could not be tested'}\n"
+        csv_line = f"{s.file_name},{self.args.compiler},{s.max_rateo[1]},{s.compiler_stats['last']},{s.compiler_stats[s.max_rateo[1]]},{s.max_rateo[0]},{'ASAN tested' if s.asan_tested else 'ASAN could not be tested'},{s.strategy_mutation}\n"
         with open(output_dir, "w") as f:
             f.writelines(csv_line)
             f.writelines(diff)

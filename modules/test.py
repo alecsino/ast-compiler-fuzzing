@@ -95,6 +95,8 @@ class Stats:
     asan_tested: bool = False
     """Whether the test has been tested with asan."""
 
+    strategy_mutation: str = "Not mutated"
+
     def __init__(self, file_path: str, file_name: str, file_content: str):
         """Initialize the stats.
 
