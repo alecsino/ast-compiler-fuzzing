@@ -82,7 +82,14 @@ class Compiler:
             result = subprocess.run([compiler, dir+".c", "-S", "-o", output_dir+".s"] + self.FLAGS, stderr=subprocess.PIPE, timeout=5)
         except subprocess.TimeoutExpired:
             os.remove(dir+".c")
+
+            try:
+                os.remove(output_dir+".s")
+            except OSError as e:
+                pass
+            
             return 0
+        
         
         if result.stderr:
             with open(os.path.join("err", "err_"+output_name)+".c", "w") as f:
