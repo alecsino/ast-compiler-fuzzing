@@ -21,16 +21,16 @@ class Random:
         
         match input.type:
             case constants.Type.INT:
-                    return  str(random.randint(constants.INT_MIN, constants.INT_MAX)) if input.len is None or not input.is_declared else "{" + ", ".join([str(random.randint(constants.INT_MIN, constants.INT_MAX)) for i in range(input.len)]) + "}"     
+                    return  str(random.randint(constants.INT_MIN, constants.INT_MAX)) if input.len is None or not input.is_declared else "{" + ", ".join([str(random.randint(constants.INT_MIN, constants.INT_MAX)) for i in range(min(input.len, 10))]) + "}"     
             case constants.Type.SHORT:
-                    return  str(random.randint(constants.SHORT_MIN, constants.SHORT_MAX)) if input.len is None or not input.is_declared  else  "{" + ", ".join([str(random.randint(constants.SHORT_MIN, constants.SHORT_MAX)) for i in range(input.len)]) + "}" 
+                    return  str(random.randint(constants.SHORT_MIN, constants.SHORT_MAX)) if input.len is None or not input.is_declared  else  "{" + ", ".join([str(random.randint(constants.SHORT_MIN, constants.SHORT_MAX)) for i in range(min(input.len, 10))]) + "}" 
             case constants.Type.LONG:
-                return str(random.randint(constants.LONG_MIN, constants.LONG_MAX)) if input.len is None or not input.is_declared else "{" + ", ".join([str(random.randint(constants.LONG_MIN, constants.LONG_MAX)) for i in range(input.len)]) + "}"
+                return str(random.randint(constants.LONG_MIN, constants.LONG_MAX)) if input.len is None or not input.is_declared else "{" + ", ".join([str(random.randint(constants.LONG_MIN, constants.LONG_MAX)) for i in range(min(input.len, 10))]) + "}"
             case constants.Type.FLOAT:
-                return str(random.uniform(constants.FLOAT_MIN, constants.FLOAT_MAX)) if input.len is None or not input.is_declared else "{" + ", ".join([str(random.uniform(constants.FLOAT_MIN, constants.FLOAT_MAX)) for i in range(input.len)]) + "}"
+                return str(random.uniform(constants.FLOAT_MIN, constants.FLOAT_MAX)) if input.len is None or not input.is_declared else "{" + ", ".join([str(random.uniform(constants.FLOAT_MIN, constants.FLOAT_MAX)) for i in range(min(input.len, 10))]) + "}"
             case constants.Type.DOUBLE:
-                return str(random.uniform(constants.DOUBLE_MIN, constants.DOUBLE_MAX)) if input.len is None or not input.is_declared else "{" +", ".join([str(random.uniform(constants.DOUBLE_MIN, constants.DOUBLE_MAX)) for i in range(input.len)]) + "}"
+                return str(random.uniform(constants.DOUBLE_MIN, constants.DOUBLE_MAX)) if input.len is None or not input.is_declared else "{" +", ".join([str(random.uniform(constants.DOUBLE_MIN, constants.DOUBLE_MAX)) for i in range(min(input.len, 10))]) + "}"
             case constants.Type.CHAR:
-                return "\'" + random.choice(constants.CHARACTERS) + "\'" if input.len is None or not input.is_declared  else "\"" + "".join([random.choice (constants.CHARACTERS) for i in range(input.len-1)]) + "\""
+                return "\'" + random.choice(constants.CHARACTERS) + "\'" if input.len is None or not input.is_declared  else "\"" + "".join([random.choice (constants.CHARACTERS) for i in range(min(input.len-1, 10))]) + "\""
             case _:
                  raise ValueError(f"Type {input.type} not supported")
