@@ -77,7 +77,7 @@ class Fuzzer:
         if no_mut.stats.is_interesting() and no_mut.is_asan_safe(self.compiler):
             return no_mut
 
-        fuzzed = self._find_best_mutations(fuzzed_test, n_iterations=100)
+        fuzzed = self._find_best_mutations(fuzzed_test, n_iterations=50)
         if fuzzed is None:
             return None
         

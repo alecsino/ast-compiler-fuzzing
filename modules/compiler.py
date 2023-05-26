@@ -78,7 +78,12 @@ class Compiler:
         with open(dir+".c", "w") as f:
             f.write(test.file_content)
 
-        result = subprocess.run([compiler, dir+".c", "-S", "-o", output_dir+".s"] + self.FLAGS, stderr=subprocess.PIPE)
+        try:
+            result = subprocess.run([compiler, dir+".c", "-S", "-o", output_dir+".s"] + self.FLAGS, stderr=subprocess.PIPE, timeout=5)
+        except subprocess.TimeoutExpired:
+            os.remove(dir+".c")
+            return 0
+        
         if result.stderr:
             with open(os.path.join("err", "err_"+output_name)+".c", "w") as f:
                 f.write(test.file_content)
