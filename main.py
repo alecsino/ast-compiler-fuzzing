@@ -14,7 +14,7 @@ def main():
     mutator = Mutator()
     tests = data_loader.tests()
     
-    folders_used = ["data", "err", ".tmp"]
+    folders_used = ["err", ".tmp"]
     for folder in folders_used:
         if not os.path.exists(folder):
             os.makedirs(folder)
