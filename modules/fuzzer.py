@@ -56,7 +56,7 @@ class Fuzzer:
                                         return interesting_tests
 
                             
-                            list_of_fuzzed_tests = [ test for test in list_of_fuzzed_tests if test.stats.file_path  not in [stat.file_path for stat in interesting_tests]]
+                            list_of_fuzzed_tests = [ test for test in list_of_fuzzed_tests if test.test.name  not in [stat.file_path for stat in interesting_tests]]
                             inner_bar.close()
                             
         except KeyboardInterrupt:
