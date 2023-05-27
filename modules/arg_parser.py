@@ -13,6 +13,7 @@ class ArgParser:
         self.parser.add_argument("-n", "--num_cores", help="Specify the number of cores to use", default=multiprocessing.cpu_count(), type=int)
         self.parser.add_argument("-t", "--threshold", help="Specify the threshold for the fuzzer", default=10, type=int)
         self.parser.add_argument("-d", "--data", help="Specify the test data directory", default="tests_files")
+        self.parser.add_argument("-a", "--analysis", help="Specify the data analysis directory", default="data_analysis")
        
         self.args = self.parser.parse_args()
         

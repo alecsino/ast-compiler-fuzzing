@@ -1,5 +1,6 @@
 import random
 from datetime import datetime
+from modules.data_analyzer import DataAnalyzer
 
 from modules.strategies.random import Random
 from modules.strategies.boundaries import Boundaries
@@ -11,22 +12,12 @@ import matplotlib.pyplot as plt
 class Mutator:
     
     
-    def __init__(self) -> None:
+    def __init__(self, data_analyzer : DataAnalyzer) -> None:
+        self.data_analyzer = data_analyzer
         self.strategies = {
             "Random":  Random(),
             "Boundaries": Boundaries(),
              "Modification":  Modification(),
-        }
-        
-        self.heuristic_stats = {
-            "Random": [],
-            "Boundaries": [],
-            "Modification": [],
-        }
-        self.STRATEGY_TRIES = {
-            "Random":  200,
-            "Boundaries": 10, 
-            "Modification": 50
         }
     
     def strategy(self, index: int) -> str:
@@ -45,28 +36,7 @@ class Mutator:
         except ValueError as e:
             strategy_name = "Random"
             mutated_value =  self.strategies[strategy_name].mutate(input)
-        self.heuristic_stats[strategy_name] += [datetime.now()]
+        self.data_analyzer.register_mutation_type(strategy_name, mutated_value)
         return mutated_value
     
-    def mutate(self, input: Input, strategy_name: str) -> str:
-        try: 
-            mutated_value = self.strategies[strategy_name].mutate(input)
-        except ValueError as e:
-            strategy_name = "Random"
-            mutated_value =  self.strategies[strategy_name].mutate(input)
-        self.heuristic_stats[strategy_name] += [datetime.now()]
-        return mutated_value
     
-    def plot(self):
-                
-        strategies = [self.strategies_names[i] for i in self.heuristic_stats.keys()]
-        count = [len(self.heuristic_stats[key]) for key in self.heuristic_stats]
-        
-        fig = plt.figure(figsize = (10, 5))
-        
-        plt.bar(strategies, count, color ='maroon', width = 0.4)
-        
-        plt.xlabel("Strategy")
-        plt.ylabel("Strategy count")
-        plt.title("Mutation strategies")
-        plt.show()

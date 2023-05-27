@@ -132,6 +132,7 @@ tests_files/
 tmp/
 data/
 err/
+data_analysis/
 
 .DS_Store
 

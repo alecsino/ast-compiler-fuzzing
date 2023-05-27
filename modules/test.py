@@ -90,9 +90,13 @@ class Stats:
     """
 
     max_rateo: tuple[float, str]
+    """The max rateo with respect to an older version."""
 
     asan_tested: bool = False
     """Whether the test has been tested with asan."""
+    
+    strategy_mutation: str = None
+    """The strategy used for mutation."""
 
     def __init__(self, file_path: str, file_name: str, file_content: str):
         """Initialize the stats.
@@ -200,6 +204,6 @@ class FuzzedTest:
         """
         
         if self.old_stats is None:
-            return True
+            return False
         
         return self.stats.max_rateo[0] > self.old_stats.max_rateo[0]

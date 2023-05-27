@@ -1,7 +1,10 @@
 from collections import defaultdict
+import datetime
 import random
 from typing import NamedTuple
 from modules.compiler import Compiler, Stats
+from modules.data_analyzer import DataAnalyzer
+from modules.data_loader import DataLoader
 from modules.strategies.mutator import Mutator
 from modules.test import FuzzedTest, Input, Test
 from modules import constants
@@ -15,14 +18,15 @@ FuzzedTestTuple = NamedTuple("FuzzedTestTuple", [("test", Test), ("old_inputs", 
 class Fuzzer:
     """The fuzzer."""
     
-    def __init__(self, tests: list[Test], compiler: Compiler, mutator: Mutator,  num_cores: int, n_threshold: int = 10, data_loader = None):
+    def __init__(self, tests: list[Test], compiler: Compiler, mutator: Mutator,  num_cores: int,  data_loader : DataLoader, data_analyzer : DataAnalyzer, n_threshold: int = 10):
         self.tests = tests
         self.compiler = compiler
         self.num_cores = num_cores
         self.n_threshold = n_threshold
         self.mutator = mutator
         self.data_loader = data_loader
-    
+        self.data_analyzer = data_analyzer
+        
     def fuzz(self):
         """
         Fuzz the tests.
@@ -34,7 +38,7 @@ class Fuzzer:
         n_file_found = 0 
         depth = 0
         breadth = 0
-        list_of_fuzzed_tests = [FuzzedTestTuple(test=test, old_inputs=None, mutated_inputs=test.inputs, depth=depth, breadth=breadth, stats=None) for test in self.tests if test.has_valid_inputs()] # start the seed with the original tests
+        list_of_fuzzed_tests = [FuzzedTestTuple(test=test, old_inputs=test.inputs, mutated_inputs=test.inputs, depth=depth, breadth=breadth, stats=None) for test in self.tests if test.has_valid_inputs()] # start the seed with the original tests
         # list_of_fuzzed_tests = [(test, mutated_inputs, depth, breadth) for test, mutated_inputs, depth, breadth, _ in  self.find_best_inputs(list_of_fuzzed_tests, n_iteration=1)] # start the seed with the original tests
         
         interesting_tests: list[Stats] = []
@@ -53,7 +57,7 @@ class Fuzzer:
                                 tqdm.write(fuzzed_test.test.name)
                                 
                                 if fuzzed_test.stats.n_tests > 1 and fuzzed_test.stats.is_interesting():
-
+                                        self.data_analyzer.register_interesting_test(fuzzed_test.test.name, fuzzed_test.stats, datetime.datetime.now(), n_iteration)
                                         tqdm.write(f"Checking {fuzzed_test.test.name}")
                                         if fuzzed_test.is_asan_safe(self.compiler):
                                             pbar.update()
@@ -66,6 +70,7 @@ class Fuzzer:
                                             tqdm.write(f"Mutation for {fuzzed_test.test.name} is not ASAN safe")
 
                                 if fuzzed_test.has_improved():
+                                    self.data_analyzer.register_improvement(fuzzed_test.test.name, fuzzed_test.stats, fuzzed_test.old_stats, fuzzed_test.old_inputs, fuzzed_test.mutated_inputs)
                                     list_of_fuzzed_tests.append(FuzzedTestTuple(fuzzed_test.test, fuzzed_test.mutated_inputs, 
                                                                                 self.mutate_inputs(fuzzed_test,
                                                                                                     fuzzed_test.depth + 1, 

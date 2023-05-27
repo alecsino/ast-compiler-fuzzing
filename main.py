@@ -1,5 +1,6 @@
 import os
 from modules.compiler import Compiler
+from modules.data_analyzer import DataAnalyzer
 from modules.data_loader import DataLoader
 from modules.arg_parser import ArgParser
 from modules.fuzzer import Fuzzer
@@ -11,10 +12,13 @@ def main():
 
     compiler = Compiler(args)
     data_loader = DataLoader(args)
-    mutator = Mutator()
+    data_analyzer = DataAnalyzer(args)
+    mutator = Mutator(data_analyzer)
+    
     tests = data_loader.tests()
     
-    folders_used = [ "err", ".tmp"]
+    folders_used = [ "err", ".tmp", "data_analysis"]
+    
     for folder in folders_used:
         if not os.path.exists(folder):
             os.makedirs(folder)
@@ -22,7 +26,7 @@ def main():
         for file in os.listdir(folder):
             os.remove(os.path.join(folder, file))
 
-    fuzzer = Fuzzer(tests=tests, compiler=compiler, num_cores=args.num_cores, n_threshold=args.threshold, mutator=mutator, data_loader=data_loader)
+    fuzzer = Fuzzer(tests=tests, compiler=compiler, num_cores=args.num_cores, n_threshold=args.threshold, mutator=mutator, data_loader=data_loader, data_analyzer=data_analyzer)
 
     interesting_tests = fuzzer.fuzz()
     print(f"Found {len(interesting_tests)} interesting tests")
