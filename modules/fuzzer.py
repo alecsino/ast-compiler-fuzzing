@@ -6,6 +6,7 @@ from modules.strategies.mutator import Mutator
 from modules.test import FuzzedTest, Input, Test
 from modules import constants
 from tqdm import tqdm
+import copy
 import multiprocessing as mp
 import traceback
 

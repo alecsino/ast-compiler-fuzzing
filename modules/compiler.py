@@ -11,7 +11,7 @@ class Compiler:
         self.args = args
         pass
 
-    def is_asan_safe(self, test: Stats, compiler: str):
+    def is_asan_safe(self, test: Stats, compiler: str) ->  bool:
         output_name = "tmp_asan_" + os.path.splitext(test.file_name)[0]
         dir = os.path.join(os.path.dirname(test.file_path), output_name)
 
@@ -36,14 +36,15 @@ class Compiler:
         os.remove(dir+".c")
 
         try:
-            result = subprocess.run(["./"+output_dir], stderr=subprocess.PIPE, timeout=10)
+            result = subprocess.run(["./"+output_dir], stderr=subprocess.PIPE, stdout=subprocess.PIPE, timeout=5)
         except subprocess.TimeoutExpired:
             print("Timeout expired, probably asan safe")
 
         test.asan_tested = True
 
         if result.stderr:
-            print(result.stderr.decode("utf-8"))
+            # print(result.stderr.decode("utf-8"))
+            os.remove(output_dir)
             return False
         
         os.remove(output_dir)
@@ -51,7 +52,7 @@ class Compiler:
         return True
 
     
-    def __compile_with(self, test, compiler: str):
+    def __compile_with(self, test, compiler: str) -> int:
         """
         Compiles a test with the specified version of the compiler into assembly
         
@@ -75,8 +76,16 @@ class Compiler:
 
         with open(dir+".c", "w") as f:
             f.write(test.file_content)
+        try:
+            result = subprocess.run([compiler, dir+".c", "-S", "-o", output_dir+".s"] + self.FLAGS, stderr=subprocess.PIPE, timeout=5)
+        except subprocess.TimeoutExpired:
+            os.remove(dir+".c")
+            try:
+                os.remove(output_dir+".s")
+            except OSError as e:
+                pass
+            return 0
 
-        result = subprocess.run([compiler, dir+".c", "-S", "-o", output_dir+".s"] + self.FLAGS, stderr=subprocess.PIPE)
         if result.stderr:
             with open(os.path.join("err", "err_"+output_name)+".c", "w") as f:
                 f.write(test.file_content)
@@ -103,7 +112,7 @@ class Compiler:
         return num_lines
         
 
-    def compile_test(self, tuple):
+    def compile_test(self, tuple) -> FuzzedTest:
         """Compiles a test with the current compiler and with the previous
         
         Arguments:
@@ -130,5 +139,6 @@ class Compiler:
                 continue
             
             stats.add_compiler_stat(i, n)
+            stats.set_max() # Used to set the max_rateo variable
 
         return FuzzedTest(test=test, stats=stats, old_stats=old_stats, old_inputs=old_inputs, mutated_inputs=new_inputs, depth=depth, breadth=breadth)

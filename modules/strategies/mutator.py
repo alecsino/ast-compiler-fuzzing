@@ -12,26 +12,49 @@ class Mutator:
     
     
     def __init__(self) -> None:
-        self.strategies_names = {
-            0: "Random",
-            1: "Boundaries",
-            2: "Modification",
+        self.strategies = {
+            "Random":  Random(),
+            "Boundaries": Boundaries(),
+             "Modification":  Modification(),
         }
-        self.strategies = [Random(), Boundaries(), Modification()]
+        
         self.heuristic_stats = {
-            0: [],
-            1: [],
-            2: [],
+            "Random": [],
+            "Boundaries": [],
+            "Modification": [],
         }
+        self.STRATEGY_TRIES = {
+            "Random":  200,
+            "Boundaries": 10, 
+            "Modification": 50
+        }
+    
+    def strategy(self, index: int) -> str:
+        if 0 <= index < 0.60:
+            return "Random"
+        elif 0.60 <= index < 0.75:
+            return "Boundaries"
+        elif 0.75 <= index <= 1:
+            return "Modification"
         
     def mutate(self, input: Input) -> str:
         try: 
-            strategy_index = random.randint(0, len(self.strategies)-1)
-            mutated_value =  self.strategies[strategy_index].mutate(input)
+            strategy_index = random.uniform(0, 1)
+            strategy_name = self.strategy(strategy_index)
+            mutated_value =  self.strategies[strategy_name].mutate(input)
         except ValueError as e:
-            strategy_index = 0
-            mutated_value =  self.strategies[strategy_index].mutate(input)
-        self.heuristic_stats[strategy_index]   += [datetime.now()]
+            strategy_name = "Random"
+            mutated_value =  self.strategies[strategy_name].mutate(input)
+        self.heuristic_stats[strategy_name] += [datetime.now()]
+        return mutated_value
+    
+    def mutate(self, input: Input, strategy_name: str) -> str:
+        try: 
+            mutated_value = self.strategies[strategy_name].mutate(input)
+        except ValueError as e:
+            strategy_name = "Random"
+            mutated_value =  self.strategies[strategy_name].mutate(input)
+        self.heuristic_stats[strategy_name] += [datetime.now()]
         return mutated_value
     
     def plot(self):
