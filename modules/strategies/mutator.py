@@ -36,7 +36,7 @@ class Mutator:
         except ValueError as e:
             strategy_name = "Random"
             mutated_value =  self.strategies[strategy_name].mutate(input)
-        self.data_analyzer.register_mutation_type(strategy_name, mutated_value)
+        # self.data_analyzer.register_mutation_type(strategy_name, mutated_value)
         return mutated_value
     
     

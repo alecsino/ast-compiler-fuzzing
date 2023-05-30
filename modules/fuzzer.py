@@ -57,9 +57,9 @@ class Fuzzer:
                                 tqdm.write(fuzzed_test.test.name)
                                 
                                 if fuzzed_test.stats.n_tests > 1 and fuzzed_test.stats.is_interesting():
-                                        self.data_analyzer.register_interesting_test(fuzzed_test.test.name, fuzzed_test.stats, datetime.datetime.now(), n_iteration)
                                         tqdm.write(f"Checking {fuzzed_test.test.name}")
                                         if fuzzed_test.is_asan_safe(self.compiler):
+                                            self.data_analyzer.register_interesting_test(fuzzed_test.test.name, fuzzed_test.stats, datetime.datetime.now(), n_iteration)
                                             pbar.update()
                                             n_file_found += 1
                                             pbar.set_description(f"Found new mutation: {fuzzed_test.test.name}")
@@ -138,14 +138,14 @@ class Fuzzer:
         left_most = len(test.mutated_inputs) - 1 
         
         if depth is None or breadth is None: # mutate all the inputs
-            new_inputs = test.mutated_inputs.copy()
+            new_inputs = {i: copy.deepcopy(input) for i, input in test.mutated_inputs.items()}
             for i in range(len(test.mutated_inputs)):
                 new_inputs[i].value = self.mutator.mutate(test.mutated_inputs[i])
         elif depth != test.depth: # mutate vertically
-            new_inputs = test.mutated_inputs.copy() # progress with the mutated inputs of the previous iteration
+            new_inputs =  {i: copy.deepcopy(input) for i, input in test.mutated_inputs.items()} # progress with the mutated inputs of the previous iteration
             new_inputs[(left_most - breadth + len(test.mutated_inputs)) % len(test.mutated_inputs)].value =  self.mutator.mutate(test.mutated_inputs[(left_most - breadth + len(test.mutated_inputs))% len(test.mutated_inputs)])
         else: # mutate horizontally
-            new_inputs = test.old_inputs.copy() # backtrack and progress with the previous inputs
+            new_inputs =  {i: copy.deepcopy(input) for i, input in test.old_inputs.items()} # backtrack and progress with the previous inputs
             new_inputs[(left_most - breadth + len(test.mutated_inputs)) % len(test.mutated_inputs)].value = self.mutator.mutate(test.mutated_inputs[(left_most - breadth + len(test.mutated_inputs))% len(test.mutated_inputs)])
         
         return new_inputs
