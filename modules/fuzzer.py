@@ -1,6 +1,6 @@
-from typing import NamedTuple
 from modules.compiler import Compiler, Stats
 from modules.strategies.mutator import Mutator
+from modules.data_loader import DataLoader
 from modules.test import FuzzedTest, Input, Test
 from tqdm import tqdm
 import multiprocessing as mp
@@ -11,7 +11,7 @@ import traceback
 class Fuzzer:
     """The fuzzer."""
     
-    def __init__(self, tests: list[Test], compiler: Compiler, mutator: Mutator,  num_cores: int, n_threshold: int = 10, data_loader = None):
+    def __init__(self, tests: list[Test], compiler: Compiler, mutator: Mutator, data_loader: DataLoader, num_cores: int, n_threshold: int = 10):
         self.tests = tests
         self.compiler = compiler
         self.num_cores = num_cores

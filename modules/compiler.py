@@ -1,6 +1,6 @@
 import os
 import subprocess
-from modules.test import FuzzedTest, Test, Input, Stats
+from modules.test import FuzzedTest, Stats
 
 class Compiler:
     """Compiles the tests with the current compiler and with the previous"""
@@ -31,12 +31,13 @@ class Compiler:
         if result.stderr:
             # Could not compile with asan, probably a problem of the architecture
             test.asan_tested = False
+            test.error_message = result.stderr.decode("utf-8")
             return True
         
         os.remove(dir+".c")
 
         try:
-            result = subprocess.run(["./"+output_dir], stderr=subprocess.PIPE, stdout=subprocess.PIPE, timeout=5)
+            result = subprocess.run(["./"+output_dir], stderr=subprocess.PIPE, stdout=subprocess.PIPE, timeout=10)
         except subprocess.TimeoutExpired:
             # print("Timeout expired, probably asan safe")
             pass
@@ -45,6 +46,7 @@ class Compiler:
 
         if result.stderr:
             # print(result.stderr.decode("utf-8"))
+            test.error_message = result.stderr.decode("utf-8")
             os.remove(output_dir)
             return False
         
@@ -104,10 +106,10 @@ class Compiler:
         try:
             with open(output_dir+".s") as f:
                 num_lines = len(f.readlines())
-        except FileNotFoundError:
+        except (FileNotFoundError, OSError):
             # print(f"Compilation of file {test.file_name} with compiler {compiler} failed.")
             pass
-        
+
         try:
             os.remove(output_dir+".s")
         except OSError as e:

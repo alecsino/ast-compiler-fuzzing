@@ -91,11 +91,17 @@ class Stats:
     """
 
     max_rateo: tuple[float, str]
+    """The max rateo with respect to an older version."""
 
     asan_tested: bool = False
     """Whether the test has been tested with asan."""
 
     strategy_mutation: str = "Not mutated"
+    """The strategy used to mutate the test."""
+    
+    error_message: str | None = None
+    """Asan error message, if any."""
+    
 
     def __init__(self, file_path: str, file_name: str, file_content: str):
         """Initialize the stats.
@@ -148,6 +154,8 @@ class Stats:
         
         #search for min_v key in compiler_stats
         for key, value in self.compiler_stats.items():
+            if key == "last":
+                continue
             if value == min_v:
                 self.max_rateo = (round(self.compiler_stats["last"] / min_v, 2), key)
                 break
