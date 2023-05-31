@@ -31,9 +31,10 @@ class Compiler:
         if result.stderr:
             # Could not compile with asan, probably a problem of the architecture
             test.asan_tested = False
+            test.error_message = result.stderr.decode("utf-8")
             return True
         
-        os.remove(dir+".c")
+        os.remove(dir + ".c")
 
         try:
             result = subprocess.run(["./"+output_dir], stderr=subprocess.PIPE, stdout=subprocess.PIPE, timeout=5)
@@ -44,6 +45,7 @@ class Compiler:
 
         if result.stderr:
             # print(result.stderr.decode("utf-8"))
+            test.error_message = result.stderr.decode("utf-8")
             os.remove(output_dir)
             return False
         
@@ -77,7 +79,7 @@ class Compiler:
         with open(dir+".c", "w") as f:
             f.write(test.file_content)
         try:
-            result = subprocess.run([compiler, dir+".c", "-S", "-o", output_dir+".s"] + self.FLAGS, stderr=subprocess.PIPE, timeout=5)
+            result = subprocess.run([compiler, dir+".c", "-S", "-o", output_dir+".s"] + self.FLAGS, stderr=subprocess.PIPE, timeout=10)
         except subprocess.TimeoutExpired:
             os.remove(dir+".c")
             try:
@@ -97,10 +99,13 @@ class Compiler:
         num_lines = 0
         #count number of lines in the assembly file and then delete it - catch error if file does not exist
         try:
-            with open(output_dir+".s") as f:
+            with open(output_dir + ".s") as f:
                 num_lines = len(f.readlines())
         except FileNotFoundError:
             # print(f"Compilation of file {test.file_name} with compiler {compiler} failed.")
+            pass
+        except OSError as e:
+            print(f"Compilation of file {e}.")
             pass
         
         try:
