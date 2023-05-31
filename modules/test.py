@@ -97,6 +97,9 @@ class Stats:
     
     strategy_mutation: str = None
     """The strategy used for mutation."""
+    
+    error_message: str | None = None
+    """Asan error message."""
 
     def __init__(self, file_path: str, file_name: str, file_content: str):
         """Initialize the stats.
@@ -110,6 +113,7 @@ class Stats:
         self.file_content = file_content
         self.compiler_stats = {}
         self.max_rateo = (0, "")
+        self.error_message = None
 
 
     def add_compiler_stat(self, compiler: str, stat: int):
@@ -148,6 +152,8 @@ class Stats:
         
         #search for min_v key in compiler_stats
         for key, value in self.compiler_stats.items():
+            if key == "last":
+                continue
             if value == min_v:
                 self.max_rateo = (round(self.compiler_stats["last"] / min_v, 2), key)
                 break
