@@ -135,7 +135,7 @@ class Fuzzer:
             list[Input]: the mutated inputs
         """
         
-        left_most = len(test.mutated_inputs) - 1 
+        left_most = len(test.mutated_inputs)
         
         if depth is None or breadth is None: # mutate all the inputs
             new_inputs = {i: copy.deepcopy(input) for i, input in test.mutated_inputs.items()}
@@ -147,6 +147,5 @@ class Fuzzer:
         else: # mutate horizontally
             new_inputs =  {i: copy.deepcopy(input) for i, input in test.old_inputs.items()} # backtrack and progress with the previous inputs
             new_inputs[(left_most - breadth + len(test.mutated_inputs)) % len(test.mutated_inputs)].value = self.mutator.mutate(test.mutated_inputs[(left_most - breadth + len(test.mutated_inputs))% len(test.mutated_inputs)])
-        
         return new_inputs
     
