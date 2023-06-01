@@ -40,6 +40,16 @@ To run the tests, from the project directory run
    pytest .
 ```
 
+## **Docker**
+
+To facilitate running the tool, we provide a docker image
+
+```bash
+   docker build -t ast-compiler-fuzzing .
+```
+
+
 ##  **Troubleshooting**
 
 Make sure your architecture supports the address sanatizer check with asan using the flag `-fsanatize=address`.
+

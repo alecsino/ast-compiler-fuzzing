@@ -3,11 +3,23 @@ FROM ubuntu:latest
 
 SHELL ["/bin/bash", "-c"]
 
+
 # Install necessary packages
 RUN apt-get update && \
     apt-get install -y build-essential wget manpages-dev && \
     apt-get install -y gcc-12 g++-12 gcc-11 g++-11 gcc-10 g++-10 gcc-9 g++-9 && \
-    apt-get install -y python3
+    apt-get install -y python3  python3-pip
 
 # Set environment variables
 ENV PATH="/usr/local/bin:${PATH}"
+
+WORKDIR /app
+
+COPY ast-compiler-fuzzing ast-compiler-fuzzing
+COPY env env
+COPY requirements.txt .
+
+
+# Install the Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+

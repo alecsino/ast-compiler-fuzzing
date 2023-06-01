@@ -12,9 +12,11 @@ class ArgParser:
         self.parser.add_argument("-c", "--compiler", help="Specify the compiler", default=self.DEFAULT_COMPILER)
         self.parser.add_argument("-n", "--num_cores", help="Specify the number of cores to use", default=multiprocessing.cpu_count(), type=int)
         self.parser.add_argument("-t", "--threshold", help="Specify the threshold for the fuzzer", default=10, type=int)
-        self.parser.add_argument("-d", "--data", help="Specify the test data directory", default="tests_files")
+        self.parser.add_argument("-i", "--input", help="Specify the test data directory", default="input")
         self.parser.add_argument("-a", "--analysis", help="Specify the data analysis directory", default="data_analysis")
-       
+        self.parser.add_argument("-o", "--output", help="Specify the data analysis directory", default="output")
+        self.parser.add_argument("-f", "--with-feedback", help="Specify whether feedback is used",  action="store_true", default=False)
+            
         self.args = self.parser.parse_args()
         
         if not self.__is_valid_compiler(self.args.compiler):

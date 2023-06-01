@@ -32,7 +32,7 @@ class DataLoader:
             list[Tests]: list of processed tests.
         """        
         
-        directory = self.args.data
+        directory = self.args.input
         print(f"Analyzing tests in {directory}")
         test_directory = Path(directory)
         executable_tests = [test_file for test_file in test_directory.glob(_FILE_EXTENSION) if self._is_executable(test_file)]
@@ -131,7 +131,7 @@ class DataLoader:
             file_c = f.read()
         diff = difflib.ndiff(s.file_content.splitlines(keepends=True), file_c.splitlines(keepends=True))
 
-        output_dir = os.path.join("data", os.path.splitext(s.file_name)[0]) + ".txt"
+        output_dir = os.path.join(self.args.output, os.path.splitext(s.file_name)[0]) + ".txt"
         while os.path.isfile(output_dir):
             output_dir += "_"
         

@@ -17,7 +17,7 @@ def main():
     
     tests = data_loader.tests()
     
-    folders_used = [ "err", ".tmp", "data_analysis"]
+    folders_used = [ "err", ".tmp", args.analysis, args.output]
     
     for folder in folders_used:
         if not os.path.exists(folder):
@@ -27,14 +27,15 @@ def main():
             os.remove(os.path.join(folder, file))
 
     fuzzer = Fuzzer(tests=tests, compiler=compiler, num_cores=args.num_cores, n_threshold=args.threshold, mutator=mutator, data_loader=data_loader, data_analyzer=data_analyzer)
-
-    interesting_tests = fuzzer.fuzz()
+    
+    print(f"Feedback {'activated' if args.with_feedback else 'deactivated'}")
+    interesting_tests = fuzzer.fuzz(args.with_feedback)
     print(f"Found {len(interesting_tests)} interesting tests")
 
     # Clean up - removes all the files created by the fuzzer in the tests folder
     # remove all files that begins with "tmp_"
     print("Clean up in progress")
-    for root, dirs, files in os.walk(args.data):
+    for root, dirs, files in os.walk(args.input):
         for file in files:
             if file.startswith("tmp_"):
                 os.remove(os.path.join(root, file))

@@ -27,7 +27,8 @@ class Fuzzer:
         self.data_loader = data_loader
         self.data_analyzer = data_analyzer
         
-    def fuzz(self):
+        
+    def fuzz(self, with_feedback = True):
         """
         Fuzz the tests.
             
@@ -68,7 +69,13 @@ class Fuzzer:
                                             continue
                                         else:
                                             tqdm.write(f"Mutation for {fuzzed_test.test.name} is not ASAN safe")
-
+                                
+                                if not with_feedback:
+                                    if fuzzed_test.has_improved():
+                                        self.data_analyzer.register_improvement(fuzzed_test.test.name, fuzzed_test.stats, fuzzed_test.old_stats, fuzzed_test.old_inputs, fuzzed_test.mutated_inputs)
+                                    list_of_fuzzed_tests.append(FuzzedTestTuple(test=fuzzed_test.test, old_inputs=fuzzed_test.mutated_inputs, mutated_inputs=self.mutate_inputs(fuzzed_test) ,  depth=None, breadth=None, stats=fuzzed_test.stats))
+                                    continue
+                                    
                                 if fuzzed_test.has_improved():
                                     self.data_analyzer.register_improvement(fuzzed_test.test.name, fuzzed_test.stats, fuzzed_test.old_stats, fuzzed_test.old_inputs, fuzzed_test.mutated_inputs)
                                     list_of_fuzzed_tests.append(FuzzedTestTuple(fuzzed_test.test, fuzzed_test.mutated_inputs, 
