@@ -50,12 +50,12 @@ class Fuzzer:
         try:
             while n_file_found < self.n_threshold:
                     with mp.Pool(self.num_cores) as pool:
+                            inner_bar = tqdm(total=len(list_of_fuzzed_tests), leave=False, desc="Mutating tests")
                             fuzzed_tests = pool.imap_unordered(self.compiler.compile_test, [(test, self.apply(test, test.inputs), old_inputs, mutated_inputs, depth, breadth, old_stats) for test, old_inputs, mutated_inputs, depth, breadth, old_stats in list_of_fuzzed_tests])
-                            
                             n_iteration += 1
                             list_of_fuzzed_tests = []
                             for fuzzed_test in fuzzed_tests:
-                                tqdm.write(fuzzed_test.test.name)
+                                inner_bar.update()
                                 
                                 if fuzzed_test.stats.n_tests > 1 and fuzzed_test.stats.is_interesting():
                                         tqdm.write(f"Checking {fuzzed_test.test.name}")
@@ -86,6 +86,8 @@ class Fuzzer:
                                     list_of_fuzzed_tests.append(FuzzedTestTuple(fuzzed_test.test,  fuzzed_test.mutated_inputs, self.mutate_inputs(fuzzed_test, 
                                                                                                     fuzzed_test.depth, 
                                                                                                     fuzzed_test.breadth + 1), fuzzed_test.depth, fuzzed_test.breadth + 1, fuzzed_test.stats))
+                            inner_bar.close()
+                            
         except KeyboardInterrupt:
              pass
         except Exception as e:
