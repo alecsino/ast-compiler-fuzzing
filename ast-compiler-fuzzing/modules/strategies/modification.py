@@ -22,11 +22,11 @@ class Modification:
         """
         match input.type:
             case constants.Type.INT:
-                return self._generate_numb(input.value, constants.Short, int, random.randint) if input.len is None or not input.is_declared else "{" + ", ".join([self._generate_numb(i, constants.Short, int, random.randint) for i in input.value.replace("{", "").replace("}", "").split(", ")]) + "}"
+                return self._generate_numb(input.value, constants.Int, int, random.randint) if input.len is None or not input.is_declared else "{" + ", ".join([self._generate_numb(i, constants.Int, int, random.randint) for i in input.value.replace("{", "").replace("}", "").split(", ")]) + "}"
             case constants.Type.SHORT:
                 return self._generate_numb(input.value, constants.Short, int, random.randint) if input.len is None  or not input.is_declared else "{" + ", ".join([self._generate_numb(i, constants.Short, int, random.randint) for i in input.value.replace("{", "").replace("}", "").split(", ")]) + "}"
             case constants.Type.LONG:
-                return self._generate_numb(input.value, constants.Int, int, random.randint) if input.len is None  or not input.is_declared else "{" + ", ".join([self._generate_numb(i, constants.Int, int, random.randint) for i in input.value.replace("{", "").replace("}", "").split(", ")]) + "}"
+                return self._generate_numb(input.value, constants.Long, int, random.randint) if input.len is None  or not input.is_declared else "{" + ", ".join([self._generate_numb(i, constants.Long, int, random.randint) for i in input.value.replace("{", "").replace("}", "").split(", ")]) + "}"
             case constants.Type.FLOAT:
                 return self._generate_numb(input.value, constants.Float, float, random.uniform) if input.len is None  or not input.is_declared else "{" + ", ".join([self._generate_numb(i, constants.Float, float, random.uniform) for i in input.value.replace("{", "").replace("}", "").split(", ")]) + "}"
             case constants.Type.DOUBLE:
@@ -61,7 +61,7 @@ class Modification:
             if type_class.MIN <= converter(value) + rand_val <= type_class.MAX:
                 found = True
                 break
-            rand_val = random.uniform(type_class.MIN , type_class.MAX)
+            rand_val = random_generator(type_class.MIN , type_class.MAX)
            
         if not found:
             raise ValueError(f"Value {value} not supported")
