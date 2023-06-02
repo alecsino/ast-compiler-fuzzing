@@ -60,7 +60,7 @@ class Fuzzer:
                             inner_bar.close()
                             
         except KeyboardInterrupt:
-             pass
+            pass
         except Exception as e:
             traceback.print_exc()
         finally:     
@@ -73,32 +73,36 @@ class Fuzzer:
         """
         
         # check without mutation if the test is interesting
-        no_mut = self.compiler.compile_test((fuzzed_test.test, self.apply(fuzzed_test.test, fuzzed_test.test.inputs), fuzzed_test.mutated_inputs))
-        if no_mut.stats.is_interesting() and no_mut.is_asan_safe(self.compiler):
-            return no_mut
+        try:
+            no_mut = self.compiler.compile_test((fuzzed_test.test, self.apply(fuzzed_test.test, fuzzed_test.test.inputs), fuzzed_test.mutated_inputs))
+            if no_mut.stats.is_interesting() and no_mut.is_asan_safe(self.compiler):
+                return no_mut
 
-        fuzzed = self._find_best_mutations(fuzzed_test, n_iterations=50)
-        if fuzzed is None:
+            fuzzed = self._find_best_mutations(fuzzed_test, n_iterations=50)
+            if fuzzed is None:
+                return None
+            
+            # reduction
+            fuzzed = self._reduce_test(fuzzed)
+            
+            if fuzzed.stats.is_interesting():
+                return fuzzed
+            
+            for i in fuzzed.mutated_inputs:
+                if fuzzed.mutated_inputs[i].interesting:
+                    for strategy in self.mutator.strategies:
+                        for n in range(self.mutator.STRATEGY_TRIES[strategy]):
+                    
+                            fuzzed.mutated_inputs[i].value = self._mutate_input(fuzzed.mutated_inputs[i])
+                            fuzzed = self.compiler.compile_test((fuzzed.test, self.apply(fuzzed.test, fuzzed.mutated_inputs), fuzzed.mutated_inputs))
+                                            
+                            if fuzzed.stats.is_interesting() and fuzzed.is_asan_safe(compiler=self.compiler):
+                                fuzzed.stats.strategy_mutation = strategy
+                                return fuzzed
             return None
-        
-        # reduction
-        fuzzed = self._reduce_test(fuzzed)
-        
-        if fuzzed.stats.is_interesting():
-            return fuzzed
-        
-        for i in fuzzed.mutated_inputs:
-            if fuzzed.mutated_inputs[i].interesting:
-                for strategy in self.mutator.strategies:
-                    for n in range(self.mutator.STRATEGY_TRIES[strategy]):
-                
-                        fuzzed.mutated_inputs[i].value = self._mutate_input(fuzzed.mutated_inputs[i])
-                        fuzzed = self.compiler.compile_test((fuzzed.test, self.apply(fuzzed.test, fuzzed.mutated_inputs), fuzzed.mutated_inputs))
-                                        
-                        if fuzzed.stats.is_interesting() and fuzzed.is_asan_safe(compiler=self.compiler):
-                            fuzzed.stats.strategy_mutation = strategy
-                            return fuzzed
-        return None
+        except KeyboardInterrupt:
+            return None
+
     
     def _reduce_test(self, fuzzed_test: FuzzedTest) -> FuzzedTest:
         """
