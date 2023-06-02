@@ -131,9 +131,9 @@ class DataLoader:
             file_c = f.read()
         diff = difflib.ndiff(s.file_content.splitlines(keepends=True), file_c.splitlines(keepends=True))
 
-        output_dir = os.path.join(self.args.output, os.path.splitext(s.file_name)[0]) + ".txt"
-        while os.path.isfile(output_dir):
-            output_dir += "_"
+        # output_dir = os.path.join(self.args.output, os.path.splitext(s.file_name)[0]) + ".txt"
+        # while os.path.isfile(output_dir):
+        #     output_dir += "_"
         
         csv_line = f"{s.file_name},{self.args.compiler},{s.max_rateo[1]},{s.compiler_stats['last']},{s.compiler_stats[s.max_rateo[1]]},{s.max_rateo[0]},{'ASAN tested' if s.asan_tested else 'ASAN could not be tested'},{s.strategy_mutation},{s.error_message}\n"
         with open(output_dir, "w") as f:
