@@ -35,7 +35,7 @@ class Compiler:
         except subprocess.TimeoutExpired:
             run_result["timeout"] = True
         except Exception as e:
-            print(e)
+            run_result["error_message"] = str(e)
         
         if result and result.stderr:
             run_result["error_message"] = result.stderr.decode("utf-8")
