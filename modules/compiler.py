@@ -105,7 +105,12 @@ class Compiler:
         #count number of lines in the assembly file and then delete it - catch error if file does not exist
         try:
             with open(output_dir+".s") as f:
-                num_lines = len(f.readlines())
+                  for line in f.readlines():
+                    line = line.strip()
+                    if line.startswith('#') or line.startswith('.'):
+                        continue  # Skip comment lines and directives
+                    num_lines += 1
+
         except (FileNotFoundError, OSError):
             # print(f"Compilation of file {test.file_name} with compiler {compiler} failed.")
             pass

@@ -30,7 +30,7 @@ def main():
     # Clean up - removes all the files created by the fuzzer in the tests folder
     # remove all files that begins with "tmp_"
     print("Clean up in progress")
-    for root, dirs, files in os.walk(args.data):
+    for root, dirs, files in os.walk(args.input):
         for file in files:
             if file.startswith("tmp_"):
                 os.remove(os.path.join(root, file))
