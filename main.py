@@ -14,13 +14,18 @@ def main():
     mutator = Mutator()
     tests = data_loader.tests()
     
-    folders_used = ["err", ".tmp"]
-    for folder in folders_used:
+    folders_used = {
+        "err": True,
+        ".tmp": True,
+        args.output: False # False means that the folder will not be emptied
+    }
+
+    for folder, empty in folders_used.items():
         if not os.path.exists(folder):
             os.makedirs(folder)
-
-        for file in os.listdir(folder):
-            os.remove(os.path.join(folder, file))
+        if empty:
+            for file in os.listdir(folder):
+                os.remove(os.path.join(folder, file))
 
     fuzzer = Fuzzer(tests=tests, compiler=compiler, num_cores=args.num_cores, n_threshold=args.threshold, mutator=mutator, data_loader=data_loader)
 
