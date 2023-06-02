@@ -149,7 +149,6 @@ class Stats:
             return
 
         min_v = min([value for key, value in self.compiler_stats.items() if not key.startswith("last")])
-        
         #search for min_v key in compiler_stats
         for key, value in self.compiler_stats.items():
             if key == "last":
@@ -202,14 +201,15 @@ class FuzzedTest:
         
         return compiler.is_asan_safe(self.stats, "last") and compiler.is_asan_safe(self.stats, self.stats.max_rateo[1])
         
-    def has_improved(self):
+    def has_improved(self, stats):
         """Whether the fuzzed test is improved with respect to the previous mutation.
 
         Returns:
             bool: whether the test has improved
         """
         
-        if self.old_stats is None:
-            return False
+        if stats is None:
+            return True
         
-        return self.stats.max_rateo[0] > self.old_stats.max_rateo[0]
+        return self.stats.max_rateo[0] > stats.max_rateo[0]
+    

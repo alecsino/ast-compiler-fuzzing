@@ -45,6 +45,8 @@ class Fuzzer:
         interesting_tests: list[Stats] = []
         n_iteration = 0
         print(f"Start fuzzing {len(list_of_fuzzed_tests)} tests with {self.num_cores} cores. Threshold: {self.n_threshold}")
+        
+        max_rateo_per_test = { fuzzed_test.test.name: None for fuzzed_test in list_of_fuzzed_tests}
 
         pbar = tqdm(total=self.n_threshold)
         try:
@@ -73,13 +75,15 @@ class Fuzzer:
                                             tqdm.write(f"Mutation for {fuzzed_test.test.name} is not ASAN safe")
                                 
                                 if not with_feedback:
-                                    if fuzzed_test.has_improved():
-                                        self.data_analyzer.register_improvement(fuzzed_test.test.name, fuzzed_test.stats, fuzzed_test.old_stats, fuzzed_test.old_inputs, fuzzed_test.mutated_inputs)
+                                    if fuzzed_test.has_improved(max_rateo_per_test[fuzzed_test.test.name]):
+                                        self.data_analyzer.register_improvement(fuzzed_test.test.name, fuzzed_test.stats, max_rateo_per_test[fuzzed_test.test.name], fuzzed_test.mutated_inputs, fuzzed_test.old_inputs)
+                                        max_rateo_per_test[fuzzed_test.test.name] = fuzzed_test.stats
                                     list_of_fuzzed_tests.append(FuzzedTestTuple(test=fuzzed_test.test, old_inputs=fuzzed_test.mutated_inputs, mutated_inputs=self.mutate_inputs(fuzzed_test) ,  depth=None, breadth=None, stats=fuzzed_test.stats))
                                     continue
                                     
-                                if fuzzed_test.has_improved():
-                                    self.data_analyzer.register_improvement(fuzzed_test.test.name, fuzzed_test.stats, fuzzed_test.old_stats, fuzzed_test.old_inputs, fuzzed_test.mutated_inputs)
+                                if fuzzed_test.has_improved(max_rateo_per_test[fuzzed_test.test.name]):
+                                    self.data_analyzer.register_improvement(fuzzed_test.test.name, fuzzed_test.stats, max_rateo_per_test[fuzzed_test.test.name], fuzzed_test.mutated_inputs, fuzzed_test.old_inputs)
+                                    max_rateo_per_test[fuzzed_test.test.name] = fuzzed_test.stats
                                     list_of_fuzzed_tests.append(FuzzedTestTuple(fuzzed_test.test, fuzzed_test.mutated_inputs, 
                                                                                 self.mutate_inputs(fuzzed_test,
                                                                                                     fuzzed_test.depth + 1, 
