@@ -28,12 +28,16 @@ class Compiler:
             #first item of flags
             path = flags[0]
 
+        result = None
+
         try:
             result = subprocess.run(flags, stderr=subprocess.PIPE, stdout=subprocess.PIPE, timeout=timeout)
         except subprocess.TimeoutExpired:
             run_result["timeout"] = True
+        except Exception as e:
+            print(e)
         
-        if result.stderr:
+        if result and result.stderr:
             run_result["error_message"] = result.stderr.decode("utf-8")
         
         os.remove(path)
