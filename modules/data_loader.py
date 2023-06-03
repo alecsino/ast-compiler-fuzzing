@@ -102,7 +102,7 @@ class DataLoader:
                 
 
                 for pattern, scope, is_declared  in _POSSIBLE_MATCHES:
-                    if not in_struct and not in_union and (match_line  := pattern.match(original_line)) :
+                    if not in_struct and not in_union and not in_args and (match_line  := pattern.match(original_line)) :
                         processed_line = original_line
                         
                         for match in r_global_seq.finditer(match_line.group('seq')):
