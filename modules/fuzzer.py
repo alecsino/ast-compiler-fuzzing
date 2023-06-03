@@ -86,6 +86,7 @@ class Fuzzer:
             fuzzed = self._reduce_test(fuzzed)
             
             if fuzzed.stats.is_interesting():
+                fuzzed.stats.strategy_mutation = "Random"
                 return fuzzed
             
             for i in fuzzed.mutated_inputs:
