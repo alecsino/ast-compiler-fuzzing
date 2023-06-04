@@ -84,38 +84,24 @@ class Stats:
     file_content: str 
     """Test file content."""
 
-    compiler_stats: dict[str, int]
+    compiler_stats: dict[str, int] = None
     """Stats of the compiler.
     The key 'last' contain the stats of the current compiler.
     The other keys are expected in the form '<compiler>-<version>'.
     """
 
-    max_rateo: tuple[float, str]
-    """The max rateo with respect to an older version."""
-
     asan_tested: bool = False
     """Whether the test has been tested with asan."""
 
+    max_rateo: tuple[float, str] = (0, "")
+    """The max rateo with respect to an older version."""
+    
     strategy_mutation: str = "Not mutated"
     """The strategy used to mutate the test."""
     
     error_message: str | None = None
     """Asan error message, if any."""
     
-
-    def __init__(self, file_path: str, file_name: str, file_content: str):
-        """Initialize the stats.
-
-        Arguments:
-            file_path {str} -- Full path of the file.
-            file_name {str} -- Name of the file.
-        """
-        self.file_path = file_path
-        self.file_name = file_name
-        self.file_content = file_content
-        self.compiler_stats = {}
-        self.max_rateo = (0, "")
-
 
     def add_compiler_stat(self, compiler: str, stat: int):
         """Add a stat to the compiler stats.
@@ -124,6 +110,9 @@ class Stats:
             compiler {str} -- The compiler to add the stat to.
             stat {int} -- The stat to add.
         """
+        if self.compiler_stats is None:
+            self.compiler_stats = {}
+            
         self.compiler_stats[compiler] = stat
 
     @property
@@ -180,9 +169,9 @@ class FuzzedTest:
     
     def is_asan_safe(self, compiler) -> bool:
         #if aarch64 always return true since asan is not supported
-        if platform.machine() == "aarch64" or platform.machine() == "arm64":
-            self.stats.asan_tested = False
-            return True
+        # if platform.machine() == "aarch64" or platform.machine() == "arm64":
+        #     self.stats.asan_tested = False
+        #     return True
         
         return compiler.is_asan_safe(self.stats, "last") and compiler.is_asan_safe(self.stats, self.stats.max_rateo[1])
         

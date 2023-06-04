@@ -6,7 +6,7 @@ from tqdm import tqdm
 import multiprocessing as mp
 import copy
 import traceback
-
+import random
     
 class Fuzzer:
     """The fuzzer."""
@@ -19,7 +19,7 @@ class Fuzzer:
         self.mutator = mutator
         self.data_loader = data_loader
     
-    def fuzz(self):
+    def fuzz(self, loaded_interesting_tests: list[Stats]):
         """
         Fuzz the tests.
             
@@ -28,8 +28,11 @@ class Fuzzer:
         """  
               
         n_file_found = 0 
-        list_of_fuzzed_tests = [FuzzedTest(test=test, mutated_inputs={i: copy.deepcopy(input) for i, input in test.inputs.items()}, stats=None) for test in self.tests if test.has_valid_inputs()]
-
+        list_of_fuzzed_tests = [FuzzedTest(test=test, mutated_inputs={i: copy.deepcopy(input) for i, input in test.inputs.items()}, stats=None) 
+                                for test in self.tests if test.has_valid_inputs() and test.name not in [stat.file_path for stat in loaded_interesting_tests]]
+        
+        # random.shuffle(list_of_fuzzed_tests)
+        
         best_mutations: FuzzedTest = []
         interesting_tests: list[Stats] = []
         print(f"Start fuzzing {len(list_of_fuzzed_tests)} tests with {self.num_cores} cores. Threshold: {self.n_threshold}")
@@ -57,6 +60,7 @@ class Fuzzer:
 
                             
                             list_of_fuzzed_tests = [ test for test in list_of_fuzzed_tests if test.test.name  not in [stat.file_path for stat in interesting_tests]]
+                            random.shuffle(list_of_fuzzed_tests)
                             inner_bar.close()
                             
         except KeyboardInterrupt:

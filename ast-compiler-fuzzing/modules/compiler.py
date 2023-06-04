@@ -97,22 +97,19 @@ class Compiler:
             with open(os.path.join("err", "err_"+output_name)+".c", "w") as f:
                 f.write(test.file_content)
                 f.write(result.stderr.decode("utf-8"))
-            # print(f"Compilation of file {test.file_name} with compiler {compiler} failed.")
             os.remove(dir+".c")
             return 0
 
         num_lines = 0
-        #count number of lines in the assembly file and then delete it - catch error if file does not exist
         try:
             with open(output_dir+".s") as f:
                   for line in f.readlines():
                     line = line.strip()
                     if line.startswith('#') or line.startswith('.'):
-                        continue  # Skip comment lines and directives
+                        continue  
                     num_lines += 1
 
         except (FileNotFoundError, OSError):
-            # print(f"Compilation of file {test.file_name} with compiler {compiler} failed.")
             pass
 
         try:

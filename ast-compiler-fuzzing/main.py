@@ -4,6 +4,7 @@ from modules.data_loader import DataLoader
 from modules.arg_parser import ArgParser
 from modules.fuzzer import Fuzzer
 from modules.strategies.mutator import Mutator
+from utils.utils import load_checkpoint, write_checkpoint
 
 def main():
     arg_parser = ArgParser()
@@ -17,7 +18,7 @@ def main():
     folders_used = {
         "err": True,
         ".tmp": True,
-        args.output: False # False means that the folder will not be emptied
+        args.output: True # False means that the folder will not be emptied
     }
 
     for folder, empty in folders_used.items():
@@ -27,13 +28,15 @@ def main():
             for file in os.listdir(folder):
                 os.remove(os.path.join(folder, file))
 
+    loaded_interesting_tests = load_checkpoint(args.resume) if args.resume else []
+        
     fuzzer = Fuzzer(tests=tests, compiler=compiler, num_cores=args.num_cores, n_threshold=args.threshold, mutator=mutator, data_loader=data_loader)
-
-    interesting_tests = fuzzer.fuzz()
+    interesting_tests = fuzzer.fuzz(loaded_interesting_tests) + loaded_interesting_tests
+    
+    write_checkpoint("checkpoint.json", interesting_tests)
+    
     print(f"Found {len(interesting_tests)} interesting tests")
-
-    # Clean up - removes all the files created by the fuzzer in the tests folder
-    # remove all files that begins with "tmp_"
+    
     print("Clean up in progress")
     for root, dirs, files in os.walk(args.input):
         for file in files:

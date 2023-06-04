@@ -84,7 +84,7 @@ class DataLoader:
             while original_line := f.readline():
                 match_line = None
                 
-                # ------------ skip structs and unions ------------ #
+                # ------------ skip structs, unions and args in functions ------------ #
                 if  re.compile(r".*struct.*").match(original_line) :
                     in_struct = True
                 if  re.compile(r"^}.*").match(original_line) and in_struct:

@@ -134,6 +134,7 @@ data/
 err/
 input/
 output/
+checkpoint.json
 
 .DS_Store
 
