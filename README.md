@@ -50,8 +50,8 @@ We also provide a Docker image with the needed dependencies.
 Build it and run it with the following commands
 
 ```bash
-  $ docker build -t ast-compiler-fuzzing .
-  $ docker run -it -v /path/to/ast-compiler-fuzzing:/app ast-compiler-fuzzing
+   $ docker build -t ast-compiler-fuzzing .
+   $ docker run -it -v /path/to/ast-compiler-fuzzing:/app ast-compiler-fuzzing
 ```
 
 ##  **Troubleshooting**
