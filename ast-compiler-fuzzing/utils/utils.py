@@ -21,6 +21,8 @@ def load_checkpoint(checkpoint_path: str):
     
     with open(checkpoint_path, "r") as file:
         dict_stat_list = json.load(file)
+        
+    print(f"Loaded {len(dict_stat_list)} interesting stat")
     return [ Stats(**dict_stat) for dict_stat in dict_stat_list]
 
 

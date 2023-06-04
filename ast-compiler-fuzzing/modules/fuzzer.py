@@ -31,7 +31,7 @@ class Fuzzer:
         list_of_fuzzed_tests = [FuzzedTest(test=test, mutated_inputs={i: copy.deepcopy(input) for i, input in test.inputs.items()}, stats=None) 
                                 for test in self.tests if test.has_valid_inputs() and test.name not in [stat.file_path for stat in loaded_interesting_tests]]
         
-        # random.shuffle(list_of_fuzzed_tests)
+        random.shuffle(list_of_fuzzed_tests)
         
         best_mutations: FuzzedTest = []
         interesting_tests: list[Stats] = []
