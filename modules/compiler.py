@@ -27,7 +27,7 @@ class Compiler:
         if compiler == "last":
             compiler = self.args.compiler
 
-        result = subprocess.run([compiler, dir+".c", "-fsanitize=address", "-o", output_dir] + self.FLAGS, stderr=subprocess.PIPE)
+        result = subprocess.run([compiler, dir+".c", "-fsanitize=address,undefined", "-o", output_dir] + self.FLAGS, stderr=subprocess.PIPE)
         if result.stderr:
             # Could not compile with asan, probably a problem of the architecture
             test.asan_tested = False

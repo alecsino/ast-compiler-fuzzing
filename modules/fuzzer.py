@@ -39,7 +39,7 @@ class Fuzzer:
         try:
             while True:
                     with mp.Pool(self.num_cores) as pool:
-                            best_mutations = pool.imap_unordered(self._single_mutation, list_of_fuzzed_tests)
+                            best_mutations = pool.imap_unordered(self.single_mutation, list_of_fuzzed_tests)
                             inner_bar = tqdm(total=len(list_of_fuzzed_tests), leave=False, desc="Mutating tests")
                             for test in best_mutations:
                                 inner_bar.update()
@@ -67,6 +67,13 @@ class Fuzzer:
             pbar.close()
             return interesting_tests
     
+    def single_mutation(self, fuzzed_test: FuzzedTest):
+        try:
+            return self._single_mutation(fuzzed_test)
+        except Exception as e:
+            traceback.print_exc()
+            return None
+        
     def _single_mutation(self, fuzzed_test: FuzzedTest):
         """
         Perform a single round of mutation on a file.
