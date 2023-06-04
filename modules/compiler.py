@@ -4,11 +4,10 @@ from modules.test import FuzzedTest, Stats
 
 class Compiler:
     """Compiles the tests with the current compiler and with the previous"""
-    
-    FLAGS = ["-O3", "-fno-unroll-loops", "-w"]
 
     def __init__(self, args: any):
         self.args = args
+        self.FLAGS = args.flags
         pass
 
     def is_asan_safe(self, test: Stats, compiler: str) -> bool:
@@ -27,7 +26,7 @@ class Compiler:
         if compiler == "last":
             compiler = self.args.compiler
 
-        result = subprocess.run([compiler, dir+".c", "-fsanitize=address,undefined", "-o", output_dir] + self.FLAGS, stderr=subprocess.PIPE)
+        result = subprocess.run([compiler, dir+".c", "-fsanitize=address", "-o", output_dir] + self.FLAGS, stderr=subprocess.PIPE)
         if result.stderr:
             # Could not compile with asan, probably a problem of the architecture
             test.asan_tested = False
@@ -39,6 +38,7 @@ class Compiler:
         try:
             result = subprocess.run(["./"+output_dir], stderr=subprocess.PIPE, stdout=subprocess.PIPE, timeout=10)
         except subprocess.TimeoutExpired:
+            test.error_message = "Timeout expired, probably asan safe"
             # print("Timeout expired, probably asan safe")
             pass
 

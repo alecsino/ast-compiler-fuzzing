@@ -53,7 +53,7 @@ class DataLoader:
         with file.open(encoding="ISO-8859-1", errors='ignore') as f:
             file_contents = f.read()
 
-        if len(file_contents.splitlines()) > 100:
+        if len(file_contents.splitlines()) > 200:
             return False
 
         match = re.search(_PATTERN_EXEC, file_contents)
@@ -144,4 +144,5 @@ class DataLoader:
         csv_line = f"{s.file_name},{self.args.compiler},{s.max_rateo[1]},{s.compiler_stats['last']},{s.compiler_stats[s.max_rateo[1]]},{s.max_rateo[0]},{'ASAN tested' if s.asan_tested else 'ASAN could not be tested'},{s.strategy_mutation},{s.error_message}\n"
         with open(output_dir, "w") as f:
             f.writelines(csv_line)
+            f.writelines("Flags: " + " ".join(self.args.flags) + "\n")
             f.writelines(diff)

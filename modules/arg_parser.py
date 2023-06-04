@@ -16,6 +16,8 @@ class ArgParser:
         self.parser.add_argument("-a", "--analysis", help="Specify the data analysis directory", default="data_analysis")
         self.parser.add_argument("-o", "--output", help="Specify the data analysis directory", default="output")
         self.parser.add_argument("-f", "--with-feedback", help="Specify whether feedback is used",  action="store_true", default=False)
+        self.parser.add_argument("-O", "--optimization-level", type=int, choices=[1, 2, 3], help="Specify the optimization level of GCC (1, 2, or 3)", default=3)
+
            
         self.args = self.parser.parse_args()
         
@@ -35,6 +37,9 @@ class ArgParser:
         if self.args.num_cores < 1 or multiprocessing.cpu_count() < self.args.num_cores:
             print(f"Invalid number of cores. Using {multiprocessing.cpu_count()} core.")
             self.args.num_cores = multiprocessing.cpu_count()
+        
+        self.args.flags = [f"-O{self.args.optimization_level}", "-fno-unroll-loops", "-w"]
+        print(f"Using flags: {self.args.flags}")
         pass
 
     def __is_valid_compiler(self, compiler):
