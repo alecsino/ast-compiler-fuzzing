@@ -12,7 +12,10 @@ This repository contains the code for a fuzzer developed to identify missed opti
 
 ## **Set up**
 
-### **Requirements**
+
+### **Locally**
+
+#### **Requirements**
 Make sure you have `pip` installed. To check if pip is install, run the following snippet 
 ```bash
     $ pip --version
@@ -26,7 +29,8 @@ If you do not have `pip`, you can install it with the following commands
 
 More details about this script can be found in [pypa/get-pip](https://github.com/pypa/get-pip)’s README.
 
-### **Virtual Environment**
+Make sure to also at least two versions of the same compiler available.
+The code has been tested using `gcc` and therefore it is advised to use gcc as well.
 
 Make sure you have the virtual environment activated by running
 ```bash
@@ -44,7 +48,8 @@ Finally, you can deactivate the virtual environment with
    $ deactivate
 ```
 
-## **Dockerfile**
+
+### **Dockerfile**
 We also provide a Docker image with the needed dependencies.
 
 Build it and run it with the following commands
@@ -53,6 +58,22 @@ Build it and run it with the following commands
    $ docker build -t ast-compiler-fuzzing .
    $ docker run -it -v /path/to/ast-compiler-fuzzing:/app ast-compiler-fuzzing
 ```
+
+
+## **How to run it**
+
+To run the fuzzer, from the docker set up as above or locally, use
+
+```bash
+   $ python ast-compiler-fuzzing/main.py -n <num_cores> -t <threshold> -o <optimization> -r <checkpoint_file> 
+```
+
+
+## **Experiments**
+
+We also provide alternative implementations used for conducting experiments on the fuzzer.
+Please refer to the README.md on the `main` branch to run those.
+
 
 ##  **Troubleshooting**
 
