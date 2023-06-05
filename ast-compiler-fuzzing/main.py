@@ -18,7 +18,7 @@ def main():
     folders_used = {
         "err": True,
         ".tmp": True,
-        args.output: True # False means that the folder will not be emptied
+        args.output: False # False means that the folder will not be emptied
     }
 
     for folder, empty in folders_used.items():
