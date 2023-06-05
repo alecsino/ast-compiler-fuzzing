@@ -23,11 +23,8 @@ class Mutator:
             "Boundaries": [],
             "Modification": [],
         }
-        self.STRATEGY_TRIES = {
-            "Random":  200,
-            "Boundaries": 10, 
-            "Modification": 50
-        }
+        self.STRATEGY_TRIES = [*(["Random"] * 20 +["Boundaries"] * 5 + ["Modification"] * 10)] * 4
+        
     
     def strategy(self, index: int) -> str:
         if 0 <= index < 0.60:
