@@ -2,6 +2,7 @@ from pathlib import Path
 import re
 import difflib
 import os
+import platform
 
 from modules.test import Input, Test, Stats
 
@@ -133,16 +134,16 @@ class DataLoader:
     def save_results(self, s: Stats):
         """Save the results of the interesting tests to a file."""
 
-        with open(s.file_path, "r") as f:
-            file_c = f.read()
-        diff = difflib.ndiff(s.file_content.splitlines(keepends=True), file_c.splitlines(keepends=True))
+        # with open(s.file_path, "r") as f:
+        #     file_c = f.read()
+        # diff = difflib.ndiff(s.file_content.splitlines(keepends=True), file_c.splitlines(keepends=True))
 
         output_dir = os.path.join(self.args.output, os.path.splitext(s.file_name)[0]) + ".txt"
         while os.path.isfile(output_dir):
             output_dir += "_"
         
-        csv_line = f"{s.file_name},{self.args.compiler},{s.max_rateo[1]},{s.compiler_stats['last']},{s.compiler_stats[s.max_rateo[1]]},{s.max_rateo[0]},{'ASAN tested' if s.asan_tested else 'ASAN could not be tested'},{s.strategy_mutation},{s.error_message}\n"
+        csv_line = f"{s.file_path},{self.args.compiler},{s.max_rateo[1]},{s.compiler_stats['last']},{s.compiler_stats[s.max_rateo[1]]},{s.max_rateo[0]},{s.strategy_mutation},{'ASAN tested' if s.asan_tested else 'ASAN could not be tested'},{s.error_message}\n"
         with open(output_dir, "w") as f:
             f.writelines(csv_line)
-            f.writelines("Flags: " + " ".join(self.args.flags) + "\n")
-            f.writelines(diff)
+            f.writelines("Flags: " + " ".join(self.args.flags) + f" - Compiled for {platform.system()} - {platform.machine()}\n")
+            f.writelines(s.file_content.splitlines(keepends=True))
