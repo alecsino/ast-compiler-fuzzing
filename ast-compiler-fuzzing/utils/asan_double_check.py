@@ -3,7 +3,7 @@ import subprocess
 input_dir = "./output/O2"
 test_folder = "./input"
 
-FLAGS = ["-O2", "-fno-unroll-loops", "-w", "-fsanitize=address,undefined"]
+FLAGS = ["-O2", "-fno-unroll-loops", "-w"]
 
 def main():
     #for each file in input_dir
@@ -45,7 +45,7 @@ def main():
         #compile this file with FLAGS
 
         # for i in compiler:
-        #     result = subprocess.run([i, c_path, "-o", "tmp-"+i] + FLAGS, stderr=subprocess.PIPE)
+        #     result = subprocess.run([i, c_path, "-o", "-fsanitize=address,undefined", "tmp-"+i] + FLAGS, stderr=subprocess.PIPE)
         #     if result.stderr:
         #         print("Error compiling file: " + c_path)
         #         print(result.stderr.decode("utf-8"))
