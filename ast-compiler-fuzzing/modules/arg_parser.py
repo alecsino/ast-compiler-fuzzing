@@ -5,7 +5,7 @@ import subprocess
 
 class ArgParser:
     """ This class is used to parse the command line arguments. """
-    DEFAULT_COMPILER = "gcc-12"
+    DEFAULT_COMPILER = "gcc-13"
 
     def __init__(self):
         self.parser = argparse.ArgumentParser()
@@ -13,16 +13,14 @@ class ArgParser:
         self.parser.add_argument("-n", "--num_cores", help="Specify the number of cores to use", default=multiprocessing.cpu_count(), type=int)
         self.parser.add_argument("-t", "--threshold", help="Specify the threshold for the fuzzer", default=10, type=int)
         self.parser.add_argument("-i", "--input", help="Specify the test data directory", default="input")
-        self.parser.add_argument("-a", "--analysis", help="Specify the data analysis directory", default="data_analysis")
         self.parser.add_argument("-o", "--output", help="Specify the data analysis directory", default="output")
-        self.parser.add_argument("-f", "--with-feedback", help="Specify whether feedback is used",  action="store_true", default=False)
         self.parser.add_argument("-O", "--optimization-level", type=int, choices=[1, 2, 3], help="Specify the optimization level of GCC (1, 2, or 3)", default=3)
         self.parser.add_argument("-r", "--resume", help="Specify which checkpoint to use, if any.",  default=None)
            
         self.args = self.parser.parse_args()
         
         if not self.__is_valid_compiler(self.args.compiler):
-            print(f"Could not find compiler {self.args.compiler}.")
+            print(f"Could not find compiler {self.args.compiler}. Please specify the main compiler with -c.")
             exit(1)
         
         self.__set_compiler_type_version(self.args.compiler)
@@ -30,7 +28,7 @@ class ArgParser:
 
         self.args.older_compilers = self.__get_older_compilers(self.args.compiler_version)
         if len(self.args.older_compilers) == 0:
-            print("No older compilers found. Exiting.")
+            print("No older compilers found. Make sure they're in your path. Exiting.")
             exit(1)
         print(f"Found {len(self.args.older_compilers)} older compilers: { ', '.join(self.args.older_compilers)}")
 
