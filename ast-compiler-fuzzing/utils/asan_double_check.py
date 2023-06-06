@@ -18,21 +18,11 @@ def main():
         file_path = os.path.dirname(line[0])
         compiler = [line[1], line[2]]
 
-        #remove first line from file_content
-        file_content = "\n".join(file_content.split("\n")[1:])
-
-        #if first line starts with "Flags:" also remove it
-        if file_content.startswith("Flags:"):
-            file_content = "\n".join(file_content.split("\n")[1:])
-
-        #remove lines containing '+' as first char
-        file_content = "\n".join([line for line in file_content.split("\n") if not line.strip().startswith("+")])
-
-        #remove char '-' if first char in line
-        file_content = "\n".join([line[1:] if line.strip().startswith("-") else line for line in file_content.split("\n")])
-
-        #remove lines with '?' as first char
-        file_content = "\n".join([line for line in file_content.split("\n") if not line.strip().startswith("?")])
+        #remove from first line to "Flags:", so we just have the c file
+        for i in range(len(file_content.split("\n"))):
+            if file_content.split("\n")[i].strip().startswith("Flags:"):
+                file_content = "\n".join(file_content.split("\n")[i+1:])
+                break
 
         #save this file in file_path
         file_name = os.path.basename(line[0])
@@ -43,13 +33,24 @@ def main():
         print("File saved in: " + c_path)
         
         #compile this file with FLAGS
+        not_compiled = False
+        for i in compiler:
+            result = subprocess.run([i, c_path, "-o", "tmp-"+i, "-fsanitize=address,undefined"] + FLAGS, stderr=subprocess.PIPE)
+            if result.stderr:
+                print("Error compiling file: " + c_path)
+                print(result.stderr.decode("utf-8"))
+                not_compiled = True
+                break
+            #run it
+            result = subprocess.run(["./tmp-"+i], stderr=subprocess.PIPE, timeout=5)
+            if result.stderr:
+                print("Error running file: " + c_path)
+                print(result.stderr.decode("utf-8"))
+            os.remove("tmp-"+i)
 
-        # for i in compiler:
-        #     result = subprocess.run([i, c_path, "-o", "-fsanitize=address,undefined", "tmp-"+i] + FLAGS, stderr=subprocess.PIPE)
-        #     if result.stderr:
-        #         print("Error compiling file: " + c_path)
-        #         print(result.stderr.decode("utf-8"))
-        #         exit(1)
+        if not_compiled:
+            os.remove(c_path)
+            continue
 
         s_lines = [line[3], line[4]]
         s_got = []
