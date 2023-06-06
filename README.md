@@ -1,4 +1,4 @@
-# **Compiler Fuzzing via Guided Value Mutatiom**
+# **Compiler Fuzzing via Guided Value Mutation**
 
 This repository contains the code for a fuzzer developed to identify missed optimizations and performance decreases across different versions of the same compiler. . The fuzzer works by generating mutants of a given seed program, specifically targeting the mutation of constant values, and analyzing the resulting binary differences.
 
@@ -62,20 +62,25 @@ Build it and run it with the following commands
 
 ## **How to run it**
 
+Make sure the dataset is correctly placed in the input folder. To do so just unzip the provided archive:
+```bash
+   $ unzip input.zip
+```
+
 To run the fuzzer, from the docker set up as above or locally, use
 
 ```bash
-   $ python3 ast-compiler-fuzzing/main.py -n <num_cores> -t <threshold> -o <optimization> -r <checkpoint_file> 
+   $ python ast-compiler-fuzzing/main.py -n <num_cores> -t <threshold> -O <optimization> -c <main_compiler>
 ```
 
-
-
-## **Experiments**
-
-We also provide alternative implementations used for conducting experiments on the fuzzer.
-Please refer to the README.md on the `main` branch to run those.
+An example of run with 4 cores, using the -O3 flag, using as the main compiler gcc-12 and stopping at 20 files is:
+```bash
+   $ python ast-compiler-fuzzing/main.py -n 4 -t 20 -O 3 -c gcc-12
+```
 
 
 ##  **Troubleshooting**
 
 Make sure your architecture supports the address sanatizer check with asan using the flag `-fsanatize=address`.
+
+Make sure that all the compilers can be found in the path.
