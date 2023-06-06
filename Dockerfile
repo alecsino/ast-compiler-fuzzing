@@ -15,10 +15,7 @@ ENV PATH="/usr/local/bin:${PATH}"
 
 WORKDIR /app
 
-COPY ast-compiler-fuzzing ast-compiler-fuzzing
-COPY env env
 COPY requirements.txt .
-
 
 # Install the Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt

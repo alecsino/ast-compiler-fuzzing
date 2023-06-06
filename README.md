@@ -65,8 +65,9 @@ Build it and run it with the following commands
 To run the fuzzer, from the docker set up as above or locally, use
 
 ```bash
-   $ python ast-compiler-fuzzing/main.py -n <num_cores> -t <threshold> -o <optimization> -r <checkpoint_file> 
+   $ python3 ast-compiler-fuzzing/main.py -n <num_cores> -t <threshold> -o <optimization> -r <checkpoint_file> 
 ```
+
 
 
 ## **Experiments**
