@@ -1,13 +1,14 @@
 import os
 import subprocess
-input_dir = "./output/O2"
+input_dir = "./output/"
 test_folder = "./input"
 
-FLAGS = ["-O2", "-fno-unroll-loops", "-w"]
+FLAGS = ["-O", "-fno-unroll-loops", "-w"]
 
 def main():
     #for each file in input_dir
     for file in os.listdir(input_dir):
+        print("Checking file: " + file)
         #read the first line
         line = ""
         with open(os.path.join(input_dir, file), "r") as f:
@@ -21,6 +22,9 @@ def main():
         #remove from first line to "Flags:", so we just have the c file
         for i in range(len(file_content.split("\n"))):
             if file_content.split("\n")[i].strip().startswith("Flags:"):
+                #get the opt level from the string Flags: ON
+                opt_level = file_content.split("\n")[i].strip().split(" ")[1]
+                FLAGS[0] = opt_level
                 file_content = "\n".join(file_content.split("\n")[i+1:])
                 break
 
@@ -30,9 +34,8 @@ def main():
 
         with open(c_path, "w") as f:
             f.write(file_content)
-        print("File saved in: " + c_path)
+        # print("File saved in: " + c_path)
         
-        #compile this file with FLAGS
         not_compiled = False
         for i in compiler:
             result = subprocess.run([i, c_path, "-o", "tmp-"+i, "-fsanitize=address,undefined"] + FLAGS, stderr=subprocess.PIPE)
@@ -42,7 +45,10 @@ def main():
                 not_compiled = True
                 break
             #run it
-            result = subprocess.run(["./tmp-"+i], stderr=subprocess.PIPE, timeout=5)
+            try:
+                result = subprocess.run(["./tmp-"+i], stderr=subprocess.PIPE, timeout=5)
+            except subprocess.TimeoutExpired:
+                print("Timeout, but still safe")
             if result.stderr:
                 print("Error running file: " + c_path)
                 print(result.stderr.decode("utf-8"))
@@ -70,9 +76,13 @@ def main():
                     n += 1
                 s_got.append(n)
             os.remove("tmp-"+i+".s")
-        
-        print("Expected: " + str(s_lines))
-        print("Got: " + str(s_got))
+
+        #if expected != got, print error
+        if int(s_lines[0]) != int(s_got[0]) or int(s_lines[1]) != int(s_got[1]):
+            print("Lines not matched for file: " + file)
+            print("Expected: " + str(s_lines))
+            print("Got: " + str(s_got))
+
 
         os.remove(c_path)
         # exit(1)
